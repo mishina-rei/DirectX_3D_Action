@@ -427,3 +427,36 @@ FodyWeavers.xsd
 *.msix
 *.msm
 *.msp
+
+# ビルド出力
+Debug/
+Release/
+x64/
+x86/
+*.exe
+*.pdb
+*.ilk
+*.aps
+
+# DirectX コンパイル済みシェーダー
+*.cso
+
+# ユーザー設定
+*.user
+*.suo
+
+# 外部ライブラリ
+library/
+
+# アセット
+Assets/
+
+#VSCode関係
+.vscode/
+
+# OS固有 (Windows)
+Thumbs.db
+desktop.ini
+
+# imgui
+imgui.ini
