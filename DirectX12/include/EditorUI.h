@@ -9,6 +9,8 @@
 #include <vector>
 #include <DirectXMath.h>
 
+#include "DescriptorHeapManager.h"
+
 // シーンに配置するオブジェクトの簡易表現
 struct SceneObject {
     std::string Name;
@@ -31,6 +33,10 @@ private:
     void DrawHierarchyWindow();
     void DrawInspectorWindow();
 
+    // テスト用オブジェクト
     std::vector<SceneObject> sceneObjects;
     int selectedObjectIndex = -1;
+
+    // ディスクリプタ
+    DescriptorHandle handle;
 };

@@ -26,6 +26,8 @@
     <ClCompile Include="..\library\imgui\imgui_impl_win32.cpp" />
     <ClCompile Include="..\library\imgui\imgui_tables.cpp" />
     <ClCompile Include="..\library\imgui\imgui_widgets.cpp" />
+    <ClCompile Include="src\CommandContext.cpp" />
+    <ClCompile Include="src\DescriptorHeapManager.cpp" />
     <ClCompile Include="src\DirectX12.cpp" />
     <ClCompile Include="src\EditorUI.cpp" />
     <ClCompile Include="src\GraphicsCore.cpp" />
@@ -35,6 +37,8 @@
     </ClCompile>
   </ItemGroup>
   <ItemGroup>
+    <ClInclude Include="include\CommandContext.h" />
+    <ClInclude Include="include\DescriptorHeapManager.h" />
     <ClInclude Include="include\EditorUI.h" />
     <ClInclude Include="include\GraphicsCore.h" />
     <ClInclude Include="include\DirectX12_pch.h" />

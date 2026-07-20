@@ -18,7 +18,9 @@ void EditorUI::Initialize(HWND hwnd) {
 
     bool is = false;
     bool is32 = false;
+
     // ImGui用のSRVディスクリプタヒープを渡す
+    handle = gfx.GetSrvHeapManager().Allocate();
 
     is32 = ImGui_ImplWin32_Init(hwnd);
 
@@ -26,9 +28,9 @@ void EditorUI::Initialize(HWND hwnd) {
         gfx.GetDevice(),
         2, // フレームバッファ数
         gfx.GetBackBufferFormat(),
-        gfx.GetSrvHeap(),
-        gfx.GetSrvHeap()->GetCPUDescriptorHandleForHeapStart(),
-        gfx.GetSrvHeap()->GetGPUDescriptorHandleForHeapStart()
+        gfx.GetSrvHeapManager().GetHeap(),
+        handle.CPUHandle,
+        handle.GPUHandle
     );
 
     ImGui::GetIO().Fonts->Build();
@@ -44,6 +46,8 @@ void EditorUI::Initialize(HWND hwnd) {
 void EditorUI::Shutdown()
 {
     // 終了処理
+    if (handle.IsValid())
+        GraphicsCore::Get().GetSrvHeapManager().Free(handle);
     ImGui_ImplDX12_Shutdown();
     ImGui_ImplWin32_Shutdown();
     ImGui::DestroyContext();
@@ -59,14 +63,14 @@ void EditorUI::RenderUI()
 
     DrawHierarchyWindow();
     DrawInspectorWindow();
-
+        
     // 描画データ生成
     ImGui::Render();
 
     auto* commandList = GraphicsCore::Get().GetCommandList();
 
     // ImGuiの描画コマンドを積む前に、専用のディスクリプタヒープをセットする
-    ID3D12DescriptorHeap* heaps[] = { GraphicsCore::Get().GetSrvHeap() };
+    ID3D12DescriptorHeap* heaps[] = { GraphicsCore::Get().GetSrvHeapManager().GetHeap()};
     commandList->SetDescriptorHeaps(1, heaps);
     ImGui_ImplDX12_RenderDrawData(ImGui::GetDrawData(), commandList);
 }
