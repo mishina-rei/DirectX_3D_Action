@@ -24,21 +24,21 @@ public:
     void ClearDepth(D3D12_CPU_DESCRIPTOR_HANDLE dsvHandle);
 
     // 描画関連
-	void SetViewportAndScissor(uint32_t width, uint32_t height);    // ビューポートとシザー矩形の設定
-	void SetRootSignature(ID3D12RootSignature* rootSig);            // ルートシグネチャの設定
-	void SetPipelineState(ID3D12PipelineState* pso);                // パイプラインステートの設定
-	void SetPrimitiveTopology(D3D_PRIMITIVE_TOPOLOGY topology);     // プリミティブトポロジーの設定
-	void DrawInstanced(uint32_t vertexCount, uint32_t instanceCount, uint32_t startVertex, uint32_t startInstance);     // インスタンス描画
-	void DrawIndexedInstanced(uint32_t indexCount, uint32_t instanceCount, uint32_t startIndex, int32_t baseVertex, uint32_t startInstance);    // インデックス付きインスタンス描画
+    void SetViewportAndScissor(uint32_t width, uint32_t height);    // ビューポートとシザー矩形の設定
+    void SetRootSignature(ID3D12RootSignature* rootSig);            // ルートシグネチャの設定
+    void SetPipelineState(ID3D12PipelineState* pso);                // パイプラインステートの設定
+    void SetPrimitiveTopology(D3D_PRIMITIVE_TOPOLOGY topology);     // プリミティブトポロジーの設定
+    void DrawInstanced(uint32_t vertexCount, uint32_t instanceCount, uint32_t startVertex, uint32_t startInstance);     // インスタンス描画
+    void DrawIndexedInstanced(uint32_t indexCount, uint32_t instanceCount, uint32_t startIndex, int32_t baseVertex, uint32_t startInstance);    // インデックス付きインスタンス描画
 
     // ゲッター（ImGuiのバックエンドに渡す用など）
-    ID3D12GraphicsCommandList* GetCommandList() const { return m_CommandList.Get(); }
+    ID3D12GraphicsCommandList* GetCommandList() const { return commandList.Get(); }
 
 private:
-    ComPtr<ID3D12GraphicsCommandList> m_CommandList;
-    ID3D12CommandQueue* m_CommandQueue = nullptr;
+    ComPtr<ID3D12GraphicsCommandList> commandList;
+    ID3D12CommandQueue* commandQueue = nullptr;
 
     // パフォーマンス最適化のため、バリアをある程度まとめて発行できるようにする
-    std::vector<D3D12_RESOURCE_BARRIER> m_ResourceBarriers;
+    std::vector<D3D12_RESOURCE_BARRIER> resourceBarriers;
     void FlushResourceBarriers();
 };
