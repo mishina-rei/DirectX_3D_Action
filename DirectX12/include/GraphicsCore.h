@@ -22,10 +22,15 @@ public:
     ID3D12GraphicsCommandList* GetCommandList() const { return commandContext.GetCommandList(); }
     // CommandContext へアクセス
     CommandContext& GetCommandContext() { return commandContext; }
-    //ID3D12DescriptorHeap* GetSrvHeap() const { return  srvHeap.Get(); }
     DescriptorHeapManager& GetSrvHeapManager() { return descriptorHeapManager; }
     DXGI_FORMAT GetBackBufferFormat() const { return DXGI_FORMAT_R8G8B8A8_UNORM; }
     ID3D12CommandQueue* GetCommandQueue()const { return commandQueue.Get(); }
+
+    // 深度バッファのフォーマットを取得（32bit Float を推奨）
+    DXGI_FORMAT GetDepthBufferFormat() const { return DXGI_FORMAT_D32_FLOAT; }
+
+    // コマンドリストにセットするためのDSVハンドルを取得
+    D3D12_CPU_DESCRIPTOR_HANDLE GetDsvHandle() const;
 
 private:
     GraphicsCore() = default;
@@ -56,9 +61,9 @@ private:
 
     // ディスクリプタヒープ
     ComPtr<ID3D12DescriptorHeap>  rtvHeap;
-    ComPtr<ID3D12DescriptorHeap>  dsvHeap;
-    //ComPtr<ID3D12DescriptorHeap>  srvHeap; // ImGuiやテクスチャ用
     DescriptorHeapManager descriptorHeapManager;
 
-    
+    // 深度バッファ用リソース
+    ComPtr<ID3D12Resource> depthBuffer;
+    ComPtr<ID3D12DescriptorHeap> dsvHeap;
 };

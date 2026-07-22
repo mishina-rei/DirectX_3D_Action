@@ -95,6 +95,59 @@ void GraphicsCore::Initialize(HWND hwnd, uint32_t width, uint32_t height) {
     for (uint32_t i = 0; i < frameCount; ++i) {
         frameFenceValues[i] = 0;
     }
+
+    // DSV（深度バッファ）用ディスクリプタヒープの作成
+    D3D12_DESCRIPTOR_HEAP_DESC dsvHeapDesc = {};
+    dsvHeapDesc.NumDescriptors = 1; // 深度バッファは通常1つで十分
+    dsvHeapDesc.Type = D3D12_DESCRIPTOR_HEAP_TYPE_DSV;
+    dsvHeapDesc.Flags = D3D12_DESCRIPTOR_HEAP_FLAG_NONE; // シェーダーから読まないのでNONE
+    device->CreateDescriptorHeap(&dsvHeapDesc, IID_PPV_ARGS(&dsvHeap));
+
+    // 深度バッファ（テクスチャ）のリソースプロパティ設定
+    D3D12_HEAP_PROPERTIES heapProps = {};
+    heapProps.Type = D3D12_HEAP_TYPE_DEFAULT; // VRAM上に配置
+
+    D3D12_RESOURCE_DESC depthDesc = {};
+    depthDesc.Dimension = D3D12_RESOURCE_DIMENSION_TEXTURE2D;
+    depthDesc.Alignment = 0;
+    depthDesc.Width = width;
+    depthDesc.Height = height;
+    depthDesc.DepthOrArraySize = 1;
+    depthDesc.MipLevels = 1;
+    depthDesc.Format = GetDepthBufferFormat(); // DXGI_FORMAT_D32_FLOAT
+    depthDesc.SampleDesc.Count = 1;
+    depthDesc.SampleDesc.Quality = 0;
+    depthDesc.Layout = D3D12_TEXTURE_LAYOUT_UNKNOWN;
+    depthDesc.Flags = D3D12_RESOURCE_FLAG_ALLOW_DEPTH_STENCIL; // 深度バッファとして使うフラグ
+
+    // クリア値の最適化（1.0f = 最も奥 にクリアする設定）
+    D3D12_CLEAR_VALUE optClear = {};
+    optClear.Format = GetDepthBufferFormat();
+    optClear.DepthStencil.Depth = 1.0f;
+    optClear.DepthStencil.Stencil = 0;
+
+    // リソースの作成
+    // 初期状態は D3D12_RESOURCE_STATE_DEPTH_WRITE で作成
+    device->CreateCommittedResource(
+        &heapProps,
+        D3D12_HEAP_FLAG_NONE,
+        &depthDesc,
+        D3D12_RESOURCE_STATE_DEPTH_WRITE,
+        &optClear,
+        IID_PPV_ARGS(&depthBuffer)
+    );
+
+    // DSVの作成 (ヒープに登録)
+    D3D12_DEPTH_STENCIL_VIEW_DESC dsvDesc = {};
+    dsvDesc.Format = GetDepthBufferFormat();
+    dsvDesc.ViewDimension = D3D12_DSV_DIMENSION_TEXTURE2D;
+    dsvDesc.Flags = D3D12_DSV_FLAG_NONE;
+
+    device->CreateDepthStencilView(
+        depthBuffer.Get(),
+        &dsvDesc,
+        dsvHeap->GetCPUDescriptorHandleForHeapStart()
+    );
 }
 
 void GraphicsCore::BeginFrame() {

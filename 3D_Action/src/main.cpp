@@ -1,6 +1,7 @@
 #include <windows.h>
 #include "GraphicsCore.h"
 #include "EditorUI.h"
+#include "ShaderManager.h"
 
 // ImGuiのWin32メッセージハンドラを宣言
 extern IMGUI_IMPL_API LRESULT ImGui_ImplWin32_WndProcHandler(HWND hWnd, UINT msg, WPARAM wParam, LPARAM lParam);
@@ -81,6 +82,12 @@ int WINAPI WinMain(HINSTANCE hInstance, HINSTANCE, LPSTR, int nCmdShow) {
     EditorUI editor;
     editor.Initialize(hwnd);
 
+    ShaderManager::Get().Initialize(GraphicsCore::Get().GetDevice());
+    
+    ShaderManager::Get().LoadShader("Standard", L"C:\\Develop\\3D_Action\\DirectX_3D_Action\\3D_Action\\src\\Shader\\StandardVS.hlsl", L"C:\\Develop\\3D_Action\\DirectX_3D_Action\\3D_Action\\src\\Shader\\StandardPS.hlsl");
+    //ShaderManager::Get().LoadShader("Standard", L"Shader/StandardVS.hlsl", L"Shader/StandardPS.hlsl");
+    ShaderManager::Get().CreateStandardPSO("Standard", GraphicsCore::Get().GetBackBufferFormat(), GraphicsCore::Get().GetDepthBufferFormat());
+
     // メインループ
     bool isRunning = true;
     while (isRunning) {
@@ -101,7 +108,28 @@ int WINAPI WinMain(HINSTANCE hInstance, HINSTANCE, LPSTR, int nCmdShow) {
             GraphicsCore::Get().BeginFrame();
 
             // --- ゲームの更新と描画 ---
-            
+            // --- 描画ループ内 ---
+			auto& gfx = GraphicsCore::Get();
+            auto* ctx = &gfx.GetCommandContext();
+            auto* psoState = ShaderManager::Get().GetPipelineState("Standard");
+
+            // 1. PSOとルートシグネチャをセット
+            ctx->SetPipelineState(psoState->PSO.Get());
+            ctx->SetRootSignature(psoState->RootSignature.Get());
+
+            // 2. ディスクリプタヒープをセット (以前作ったマネージャーを使用)
+            ID3D12DescriptorHeap* ppHeaps[] = { gfx.GetSrvHeapManager().GetHeap() };
+            ctx->GetCommandList()->SetDescriptorHeaps(_countof(ppHeaps), ppHeaps);
+
+            // 3. ルートパラメータに実際のデータをバインド
+            // Root Parameter 0: カメラ定数バッファ (b0)
+            //ctx->GetCommandList()->SetGraphicsRootConstantBufferView(0, cameraCB->GetGPUVirtualAddress());
+
+            // Root Parameter 1: モデル定数バッファ (b1)
+            //ctx->GetCommandList()->SetGraphicsRootConstantBufferView(1, modelCB->GetGPUVirtualAddress());
+
+            // Root Parameter 2: テクスチャテーブル (t0)
+            //ctx->GetCommandList()->SetGraphicsRootDescriptorTable(2, modelTexture->GetSrvHandle().GPUHandle);
 
             // --- エディタUIの構築と描画 ---
             editor.RenderUI();

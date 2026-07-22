@@ -26,6 +26,7 @@
     <ClCompile Include="..\library\imgui\imgui_impl_win32.cpp" />
     <ClCompile Include="..\library\imgui\imgui_tables.cpp" />
     <ClCompile Include="..\library\imgui\imgui_widgets.cpp" />
+    <ClCompile Include="include\ShaderManager.cpp" />
     <ClCompile Include="src\CommandContext.cpp" />
     <ClCompile Include="src\DescriptorHeapManager.cpp" />
     <ClCompile Include="src\DirectX12.cpp" />
@@ -35,6 +36,7 @@
       <PrecompiledHeader Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">Create</PrecompiledHeader>
       <PrecompiledHeader Condition="'$(Configuration)|$(Platform)'=='Release|x64'">Create</PrecompiledHeader>
     </ClCompile>
+    <ClCompile Include="src\UploadRingBuffer.cpp" />
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="include\CommandContext.h" />
@@ -51,6 +53,8 @@
     <ClInclude Include="include\imstb_textedit.h" />
     <ClInclude Include="include\imstb_truetype.h" />
     <ClInclude Include="include\ShaderManager.h" />
+    <ClInclude Include="include\UploadRingBuffer.h" />
+    <ClInclude Include="resource.h" />
   </ItemGroup>
   <PropertyGroup Label="Globals">
     <VCProjectVersion>18.0</VCProjectVersion>
