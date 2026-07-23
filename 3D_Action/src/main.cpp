@@ -1,7 +1,6 @@
 #include <windows.h>
-#include "GraphicsCore.h"
-#include "EditorUI.h"
-#include "ShaderManager.h"
+
+#include "DirectX12.h"
 
 // ImGuiのWin32メッセージハンドラを宣言
 extern IMGUI_IMPL_API LRESULT ImGui_ImplWin32_WndProcHandler(HWND hWnd, UINT msg, WPARAM wParam, LPARAM lParam);
@@ -26,6 +25,35 @@ LRESULT CALLBACK WndProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam) {
     // 上記以外のメッセージはOSのデフォルト処理に任せる
     return DefWindowProc(hwnd, msg, wParam, lParam);
 }
+
+struct Vertex {
+    DirectX::XMFLOAT3 Pos;
+    DirectX::XMFLOAT3 Normal;
+    DirectX::XMFLOAT2 UV;
+};
+
+// 立方体の8頂点
+std::vector<Vertex> vertices = {
+    // Pos, Normal, UV の順
+    Vertex{ {-1.0f, -1.0f, -1.0f}, {0.0f, 1.0f, 0.0f}, {0.0f, 1.0f} },
+    Vertex{ {-1.0f,  1.0f, -1.0f}, {0.0f, 1.0f, 0.0f}, {0.0f, 0.0f} },
+    Vertex{ { 1.0f,  1.0f, -1.0f}, {0.0f, 1.0f, 0.0f}, {1.0f, 0.0f} },
+    Vertex{ { 1.0f, -1.0f, -1.0f}, {0.0f, 1.0f, 0.0f}, {1.0f, 1.0f} },
+    Vertex{ {-1.0f, -1.0f,  1.0f}, {0.0f, 1.0f, 0.0f}, {1.0f, 1.0f} },
+    Vertex{ {-1.0f,  1.0f,  1.0f}, {0.0f, 1.0f, 0.0f}, {1.0f, 0.0f} },
+    Vertex{ { 1.0f,  1.0f,  1.0f}, {0.0f, 1.0f, 0.0f}, {0.0f, 0.0f} },
+    Vertex{ { 1.0f, -1.0f,  1.0f}, {0.0f, 1.0f, 0.0f}, {0.0f, 1.0f} }
+};
+
+// 描画順（時計回りが表）
+std::vector<uint16_t> indices = {
+    0, 1, 2, 0, 2, 3, // 前
+    4, 6, 5, 4, 7, 6, // 後
+    4, 5, 1, 4, 1, 0, // 左
+    3, 2, 6, 3, 6, 7, // 右
+    1, 5, 6, 1, 6, 2, // 上
+    4, 0, 3, 4, 3, 7  // 下
+};
 
 int WINAPI WinMain(HINSTANCE hInstance, HINSTANCE, LPSTR, int nCmdShow) {
     // ウィンドウサイズ固定する
@@ -86,7 +114,27 @@ int WINAPI WinMain(HINSTANCE hInstance, HINSTANCE, LPSTR, int nCmdShow) {
     
     ShaderManager::Get().LoadShader("Standard", L"C:\\Develop\\3D_Action\\DirectX_3D_Action\\3D_Action\\src\\Shader\\StandardVS.hlsl", L"C:\\Develop\\3D_Action\\DirectX_3D_Action\\3D_Action\\src\\Shader\\StandardPS.hlsl");
     //ShaderManager::Get().LoadShader("Standard", L"Shader/StandardVS.hlsl", L"Shader/StandardPS.hlsl");
-    ShaderManager::Get().CreateStandardPSO("Standard", GraphicsCore::Get().GetBackBufferFormat(), GraphicsCore::Get().GetDepthBufferFormat());
+    //ShaderManager::Get().CreateStandardPSO("Standard", GraphicsCore::Get().GetBackBufferFormat(), GraphicsCore::Get().GetDepthBufferFormat());
+
+    // マテリアル
+    auto cubeMaterial = std::make_shared<Material>("Standard");
+
+    auto& gfx = GraphicsCore::Get();
+    auto ictx = gfx.GetCommandContext();
+
+    ictx.BeginFrame(gfx.GetCurrentCommandAllocator());
+
+    // 内部でAssimpがパースし、ctx に対して CopyBufferRegion 命令を積みます
+	Mesh mesh = Mesh();
+    mesh.Initialize<Vertex>(gfx.GetDevice(),&ictx,vertices, indices);
+
+    ictx.EndFrame();
+
+    gfx.FlushCommandQueue();
+
+    // ImGui用の一時変数
+    DirectX::XMFLOAT4 cubeColor = { 0.2f, 0.6f, 0.9f, 1.0f };
+    float rotationAngle = 0.0f;
 
     // メインループ
     bool isRunning = true;
@@ -111,28 +159,76 @@ int WINAPI WinMain(HINSTANCE hInstance, HINSTANCE, LPSTR, int nCmdShow) {
             // --- 描画ループ内 ---
 			auto& gfx = GraphicsCore::Get();
             auto* ctx = &gfx.GetCommandContext();
-            auto* psoState = ShaderManager::Get().GetPipelineState("Standard");
+            //auto* psoState = ShaderManager::Get().GetPipelineState("Standard");
 
-            // 1. PSOとルートシグネチャをセット
-            ctx->SetPipelineState(psoState->PSO.Get());
-            ctx->SetRootSignature(psoState->RootSignature.Get());
+            //// 1. PSOとルートシグネチャをセット
+            //ctx->SetPipelineState(psoState->PSO.Get());
+            //ctx->SetRootSignature(psoState->RootSignature.Get());
 
-            // 2. ディスクリプタヒープをセット (以前作ったマネージャーを使用)
+            
+            // 1. ビュー行列（カメラの位置と向き）
+            DirectX::XMVECTOR eye = DirectX::XMVectorSet(0.0f, 2.0f, -5.0f, 0.0f); // カメラをZ軸の手前(-5)、少し上(2)に配置
+            DirectX::XMVECTOR target = DirectX::XMVectorSet(0.0f, 0.0f, 0.0f, 0.0f); // キューブの中心（原点）を見る
+            DirectX::XMVECTOR up = DirectX::XMVectorSet(0.0f, 1.0f, 0.0f, 0.0f); // 上はY方向
+            DirectX::XMMATRIX view = DirectX::XMMatrixLookAtLH(eye, target, up);
+
+            // 2. プロジェクション行列（遠近感と画角）
+            float fov = DirectX::XMConvertToRadians(45.0f);
+            float aspect = 1920.0f / 1080.0f; // ウィンドウサイズに合わせる
+            DirectX::XMMATRIX proj = DirectX::XMMatrixPerspectiveFovLH(fov, aspect, 0.1f, 100.0f);
+
+            // 3. 掛け合わせて ViewProjection にする
+            auto viewProj = DirectX::XMMatrixMultiply(view, proj);
+            auto world = DirectX::XMMatrixRotationY(DirectX::XMConvertToRadians(rotationAngle));
+
+            //auto viewProj = DirectX::XMMatrixIdentity(); // 仮のビュー射影行列   
+            //auto world = DirectX::XMMatrixRotationY(DirectX::XMConvertToRadians(rotationAngle));
+            auto wvp = DirectX::XMMatrixMultiply(world, viewProj);
+
+            auto viewProjTransposed = DirectX::XMMatrixTranspose(viewProj);
+            auto worldTransposed = DirectX::XMMatrixTranspose(world);
+
+            // 3. マテリアルへのデータセット（名前ベース！）
+            cubeMaterial->SetMatrix("viewProjection", viewProj);
+            cubeMaterial->SetMatrix("world", world);
+
+            // ディスクリプタヒープをセット
             ID3D12DescriptorHeap* ppHeaps[] = { gfx.GetSrvHeapManager().GetHeap() };
             ctx->GetCommandList()->SetDescriptorHeaps(_countof(ppHeaps), ppHeaps);
 
-            // 3. ルートパラメータに実際のデータをバインド
-            // Root Parameter 0: カメラ定数バッファ (b0)
-            //ctx->GetCommandList()->SetGraphicsRootConstantBufferView(0, cameraCB->GetGPUVirtualAddress());
+            // マテリアルをバインド（裏側でリングバッファの確保とmemcpy、PSOセットが走る）
+            cubeMaterial->Bind();
 
-            // Root Parameter 1: モデル定数バッファ (b1)
-            //ctx->GetCommandList()->SetGraphicsRootConstantBufferView(1, modelCB->GetGPUVirtualAddress());
+            // 描画範囲（ビューポート）と切り抜き範囲（シザー矩形）を画面サイズに設定
+            D3D12_VIEWPORT viewport = { 0.0f, 0.0f, 1920.0f, 1080.0f, 0.0f, 1.0f };
+            D3D12_RECT scissorRect = { 0, 0, 1920, 1080 };
 
-            // Root Parameter 2: テクスチャテーブル (t0)
-            //ctx->GetCommandList()->SetGraphicsRootDescriptorTable(2, modelTexture->GetSrvHandle().GPUHandle);
+            ctx->GetCommandList()->RSSetViewports(1, &viewport);
+            ctx->GetCommandList()->RSSetScissorRects(1, &scissorRect);
+
+            // 頂点・インデックスバッファのセット
+            ctx->GetCommandList()->IASetVertexBuffers(0, 1, &mesh.GetVertexBufferView());
+            ctx->GetCommandList()->IASetIndexBuffer(&mesh.GetIndexBufferView());
+            ctx->GetCommandList()->IASetPrimitiveTopology(D3D_PRIMITIVE_TOPOLOGY_TRIANGLELIST);
+
+            D3D12_CPU_DESCRIPTOR_HANDLE rtvHandle = gfx.GetRtvHandle();
+            D3D12_CPU_DESCRIPTOR_HANDLE dsvHandle = gfx.GetDsvHandle();
+
+            ctx->GetCommandList()->DrawIndexedInstanced(mesh.GetIndexCount(), 1, 0, 0, 0);
+
+
+
+			editor.BeginUI(); // ImGuiのフレーム開始
+            // 1. ImGuiのUI構築
+            ImGui::Begin("Inspector");
+            ImGui::ColorEdit4("Cube Color", &cubeColor.x); // カラーピッカー！
+            ImGui::SliderFloat("Rotation", &rotationAngle, 0.0f, 360.0f);
+            ImGui::End();
+
 
             // --- エディタUIの構築と描画 ---
             editor.RenderUI();
+
 
             // --- フレーム終了（画面表示） ---
             GraphicsCore::Get().EndFrame();
@@ -145,3 +241,4 @@ int WINAPI WinMain(HINSTANCE hInstance, HINSTANCE, LPSTR, int nCmdShow) {
 
     return 0;
 }
+

@@ -15,6 +15,7 @@
 #include <D3D12helper/d3dx12.h>
 #include <wrl/client.h>
 #include <memory>
+#include <d3dcompiler.h>
 
 #pragma comment(lib, "d3d12.lib")
 #pragma comment(lib, "dxgi.lib")    // 今後 DXGI 関連のエラー（CreateDXGIFactory など）が出るのを防ぐため

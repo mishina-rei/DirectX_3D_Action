@@ -30,6 +30,8 @@ public:
 
     // HLSLファイルをコンパイルして読み込む
     void LoadShader(const std::string& name, const std::wstring& vsPath, const std::wstring& psPath);
+    void LoadPSShader(const std::string& name, const std::wstring& psPath);
+    void LoadVSShader(const std::string& name, const std::wstring& vsPath);
 
     // 読み込んだシェーダーを使ってPSOを生成する（標準的な3Dモデル用）
     void CreateStandardPSO(const std::string& name, DXGI_FORMAT rtvFormat, DXGI_FORMAT dsvFormat);
@@ -38,6 +40,11 @@ public:
         if (pipelines.count(name)) return &pipelines[name];
         return nullptr;
     }
+
+	ShaderProgram* GetShaderProgram(const std::string& name) {
+		if (shaders.count(name)) return &shaders[name];
+		return nullptr;
+	}
 
 private:
     ShaderManager() = default;

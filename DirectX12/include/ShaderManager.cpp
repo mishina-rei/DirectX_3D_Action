@@ -37,6 +37,9 @@ ComPtr<ID3DBlob> ShaderManager::CompileShader(const std::wstring& filePath, cons
 }
 
 void ShaderManager::LoadShader(const std::string& name, const std::wstring& vsPath, const std::wstring& psPath) {
+
+    if (shaders.count(name)) return;
+
     ShaderProgram program;
 
     // VSファイルから main をコンパイル
@@ -45,6 +48,22 @@ void ShaderManager::LoadShader(const std::string& name, const std::wstring& vsPa
     // PSファイルから main をコンパイル
     program.PS = CompileShader(psPath, "main", "ps_5_1");
 
+    shaders[name] = program;
+}
+
+void ShaderManager::LoadPSShader(const std::string& name, const std::wstring& psPath) {
+    if (shaders.count(name)) return;
+
+    ShaderProgram program;
+    program.PS = CompileShader(psPath, "main", "ps_5_1");
+    shaders[name] = program;
+}
+
+void ShaderManager::LoadVSShader(const std::string& name, const std::wstring& vsPath) {
+    if (shaders.count(name)) return;
+
+    ShaderProgram program;
+    program.VS = CompileShader(vsPath, "main", "vs_5_1");
     shaders[name] = program;
 }
 

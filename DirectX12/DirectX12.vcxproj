@@ -32,15 +32,20 @@
     <ClCompile Include="src\DirectX12.cpp" />
     <ClCompile Include="src\EditorUI.cpp" />
     <ClCompile Include="src\GraphicsCore.cpp" />
+    <ClCompile Include="src\Material.cpp" />
+    <ClCompile Include="src\Mesh.cpp" />
     <ClCompile Include="src\pch.cpp">
       <PrecompiledHeader Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">Create</PrecompiledHeader>
       <PrecompiledHeader Condition="'$(Configuration)|$(Platform)'=='Release|x64'">Create</PrecompiledHeader>
     </ClCompile>
+    <ClCompile Include="src\PSOCache.cpp" />
+    <ClCompile Include="src\ShaderReflection.cpp" />
     <ClCompile Include="src\UploadRingBuffer.cpp" />
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="include\CommandContext.h" />
     <ClInclude Include="include\DescriptorHeapManager.h" />
+    <ClInclude Include="include\DirectX12.h" />
     <ClInclude Include="include\EditorUI.h" />
     <ClInclude Include="include\GraphicsCore.h" />
     <ClInclude Include="include\DirectX12_pch.h" />
@@ -52,9 +57,12 @@
     <ClInclude Include="include\imstb_rectpack.h" />
     <ClInclude Include="include\imstb_textedit.h" />
     <ClInclude Include="include\imstb_truetype.h" />
+    <ClInclude Include="include\Material.h" />
+    <ClInclude Include="include\Mesh.h" />
+    <ClInclude Include="include\PSOCache.h" />
     <ClInclude Include="include\ShaderManager.h" />
+    <ClInclude Include="include\ShaderReflection.h" />
     <ClInclude Include="include\UploadRingBuffer.h" />
-    <ClInclude Include="resource.h" />
   </ItemGroup>
   <PropertyGroup Label="Globals">
     <VCProjectVersion>18.0</VCProjectVersion>

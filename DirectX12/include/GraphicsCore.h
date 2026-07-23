@@ -2,6 +2,7 @@
 #include "DirectX12_pch.h"
 #include "DescriptorHeapManager.h"
 #include "CommandContext.h"
+#include "UploadRingBuffer.h"
 
 using Microsoft::WRL::ComPtr;
 
@@ -30,7 +31,13 @@ public:
     DXGI_FORMAT GetDepthBufferFormat() const { return DXGI_FORMAT_D32_FLOAT; }
 
     // コマンドリストにセットするためのDSVハンドルを取得
-    D3D12_CPU_DESCRIPTOR_HANDLE GetDsvHandle() const;
+    D3D12_CPU_DESCRIPTOR_HANDLE GetDsvHandle() {return (dsvHeap->GetCPUDescriptorHandleForHeapStart()); }
+    D3D12_CPU_DESCRIPTOR_HANDLE GetRtvHandle() const { return (rtvHeap->GetCPUDescriptorHandleForHeapStart()); }
+
+	// リングバッファの取得
+	UploadRingBuffer& GetConstantBufferPool() { return constantBufferPool; }
+
+    ID3D12CommandAllocator* GetCurrentCommandAllocator() { return commandAllocators[frameIndex].Get(); }
 
 private:
     GraphicsCore() = default;
@@ -66,4 +73,7 @@ private:
     // 深度バッファ用リソース
     ComPtr<ID3D12Resource> depthBuffer;
     ComPtr<ID3D12DescriptorHeap> dsvHeap;
+
+    // リングバッファ
+    UploadRingBuffer constantBufferPool;
 };

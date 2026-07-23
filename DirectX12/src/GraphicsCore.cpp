@@ -148,6 +148,8 @@ void GraphicsCore::Initialize(HWND hwnd, uint32_t width, uint32_t height) {
         &dsvDesc,
         dsvHeap->GetCPUDescriptorHandleForHeapStart()
     );
+
+    constantBufferPool.Initialize(device.Get(), 4 * 1024 * 1024);
 }
 
 void GraphicsCore::BeginFrame() {
@@ -167,11 +169,21 @@ void GraphicsCore::BeginFrame() {
     // 描画先(RTV)のセットと画面クリア
     SIZE_T rtvDescriptorSize = device->GetDescriptorHandleIncrementSize(D3D12_DESCRIPTOR_HEAP_TYPE_RTV);
     CD3DX12_CPU_DESCRIPTOR_HANDLE rtvHandle(rtvHeap->GetCPUDescriptorHandleForHeapStart(), frameIndex, rtvDescriptorSize);
-    CD3DX12_CPU_DESCRIPTOR_HANDLE* nullDsv = nullptr; // 空のDSVハンドル
-    commandContext.SetRenderTarget(&rtvHandle, nullDsv);
+    CD3DX12_CPU_DESCRIPTOR_HANDLE dsvHandle(dsvHeap->GetCPUDescriptorHandleForHeapStart());
+    commandContext.SetRenderTarget(&rtvHandle, &dsvHandle);
 
-    const float clearColor[] = { 0.1f, 0.1f, 0.1f, 1.0f };
+    const float clearColor[] = { 0.4f, 0.1f, 0.1f, 1.0f };
     commandContext.ClearColor(rtvHandle, clearColor);
+
+	// 深度バッファのクリア
+    commandContext.GetCommandList()->ClearDepthStencilView(
+        dsvHandle,
+        D3D12_CLEAR_FLAG_DEPTH,
+        1.0f, // 1.0f (一番奥) でクリアするのが超重要！
+        0,
+        0,
+        nullptr
+    );
 }
 
 void GraphicsCore::EndFrame() {

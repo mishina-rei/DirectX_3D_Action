@@ -10,14 +10,14 @@ UploadRingBuffer::~UploadRingBuffer() {
 }
 
 void UploadRingBuffer::Initialize(ID3D12Device* device, size_t maxSize) {
-    maxSize = AlignUp(maxSize); // 全体サイズも一応アライメント
+    this->maxSize = AlignUp(maxSize); // 全体サイズも一応アライメント
 
     D3D12_HEAP_PROPERTIES heapProps = {};
     heapProps.Type = D3D12_HEAP_TYPE_UPLOAD; // CPUから書き込み可能
 
     D3D12_RESOURCE_DESC resourceDesc = {};
     resourceDesc.Dimension = D3D12_RESOURCE_DIMENSION_BUFFER;
-    resourceDesc.Width = maxSize;
+    resourceDesc.Width = this->maxSize;
     resourceDesc.Height = 1;
     resourceDesc.DepthOrArraySize = 1;
     resourceDesc.MipLevels = 1;

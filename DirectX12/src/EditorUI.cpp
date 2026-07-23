@@ -53,21 +53,28 @@ void EditorUI::Shutdown()
     ImGui::DestroyContext();
 }
 
-void EditorUI::RenderUI() 
+void EditorUI::BeginUI()
 {
     ImGui_ImplDX12_NewFrame();
     ImGui_ImplWin32_NewFrame();
     ImGui::NewFrame();
     // 全体をドッキングスペースにする
-    ImGui::DockSpaceOverViewport();
+    //ImGui::DockSpaceOverViewport();
+    ImGui::DockSpaceOverViewport(0,nullptr, ImGuiDockNodeFlags_PassthruCentralNode);
+}
+
+void EditorUI::RenderUI()
+{
 
     DrawHierarchyWindow();
     DrawInspectorWindow();
-        
+
     // 描画データ生成
     ImGui::Render();
 
     auto* commandList = GraphicsCore::Get().GetCommandList();
+    //auto handle = GraphicsCore::Get().GetRtvHandle();
+    //commandList->OMSetRenderTargets(1, &handle, FALSE, nullptr);
 
     // ImGuiの描画コマンドを積む前に、専用のディスクリプタヒープをセットする
     ID3D12DescriptorHeap* heaps[] = { GraphicsCore::Get().GetSrvHeapManager().GetHeap()};
