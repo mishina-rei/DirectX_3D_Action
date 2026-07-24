@@ -112,12 +112,13 @@ int WINAPI WinMain(HINSTANCE hInstance, HINSTANCE, LPSTR, int nCmdShow) {
 
     ShaderManager::Get().Initialize(GraphicsCore::Get().GetDevice());
     
-    ShaderManager::Get().LoadShader("Standard", L"C:\\Develop\\3D_Action\\DirectX_3D_Action\\3D_Action\\src\\Shader\\StandardVS.hlsl", L"C:\\Develop\\3D_Action\\DirectX_3D_Action\\3D_Action\\src\\Shader\\StandardPS.hlsl");
+    ShaderManager::Get().LoadShader("VS_Standard", L"C:\\Develop\\3D_Action\\DirectX_3D_Action\\3D_Action\\src\\Shader\\StandardVS.hlsl", L"main", L"vs_6_0");
+    ShaderManager::Get().LoadShader("PS_Standard", L"C:\\Develop\\3D_Action\\DirectX_3D_Action\\3D_Action\\src\\Shader\\StandardPS.hlsl", L"main", L"ps_6_0");
     //ShaderManager::Get().LoadShader("Standard", L"Shader/StandardVS.hlsl", L"Shader/StandardPS.hlsl");
     //ShaderManager::Get().CreateStandardPSO("Standard", GraphicsCore::Get().GetBackBufferFormat(), GraphicsCore::Get().GetDepthBufferFormat());
 
     // マテリアル
-    auto cubeMaterial = std::make_shared<Material>("Standard");
+    auto cubeMaterial = std::make_shared<Material>("VS_Standard", "PS_Standard");
 
     auto& gfx = GraphicsCore::Get();
     auto ictx = gfx.GetCommandContext();
@@ -181,16 +182,14 @@ int WINAPI WinMain(HINSTANCE hInstance, HINSTANCE, LPSTR, int nCmdShow) {
             auto viewProj = DirectX::XMMatrixMultiply(view, proj);
             auto world = DirectX::XMMatrixRotationY(DirectX::XMConvertToRadians(rotationAngle));
 
-            //auto viewProj = DirectX::XMMatrixIdentity(); // 仮のビュー射影行列   
-            //auto world = DirectX::XMMatrixRotationY(DirectX::XMConvertToRadians(rotationAngle));
             auto wvp = DirectX::XMMatrixMultiply(world, viewProj);
 
             auto viewProjTransposed = DirectX::XMMatrixTranspose(viewProj);
             auto worldTransposed = DirectX::XMMatrixTranspose(world);
 
             // 3. マテリアルへのデータセット（名前ベース！）
-            cubeMaterial->SetMatrix("viewProjection", viewProj);
-            cubeMaterial->SetMatrix("world", world);
+            cubeMaterial->SetMatrix("viewProjection", viewProjTransposed);
+            cubeMaterial->SetMatrix("world", worldTransposed);
 
             // ディスクリプタヒープをセット
             ID3D12DescriptorHeap* ppHeaps[] = { gfx.GetSrvHeapManager().GetHeap() };

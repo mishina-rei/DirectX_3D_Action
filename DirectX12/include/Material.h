@@ -10,7 +10,7 @@
 
 class Material {
 public:
-    Material(const std::string& name, ID3DBlob* vsBlob = nullptr, ID3DBlob* psBlob = nullptr);
+    Material(const std::string& VSname, const std::string& PSname);
 
     // --- 状態の変更 ---
     void SetTransparent(bool isTransparent) { PSOKey.isTransparent = isTransparent; isDirty = true; }

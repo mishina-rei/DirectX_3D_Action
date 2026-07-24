@@ -2,10 +2,12 @@
 
 #include "ShaderReflection.h"
 #include <stdexcept>
+#include "ShaderManager.h"
 
-ShaderMetadata ShaderReflection::Reflect(ID3DBlob* vsBlob, ID3DBlob* psBlob, ID3D12Device* device)
+ShaderMetadata ShaderReflection::Reflect(IDxcBlob* vsBlob, IDxcBlob* psBlob, ID3D12Device* device)
 {
     ShaderMetadata meta;
+    IDxcUtils* dxcUtils = ShaderManager::Get().GetDxcUtils();
 
     std::vector<D3D12_ROOT_PARAMETER> rootParams;
     std::vector<D3D12_DESCRIPTOR_RANGE> srvRanges;
@@ -15,13 +17,19 @@ ShaderMetadata ShaderReflection::Reflect(ID3DBlob* vsBlob, ID3DBlob* psBlob, ID3
     srvRanges.reserve(16);
 
     // VSとPSの両方を解析するための配列
-    ID3DBlob* blobs[] = { vsBlob, psBlob };
+    IDxcBlob* blobs[] = { vsBlob, psBlob };
 
-    for (ID3DBlob* blob : blobs) {
+    for (IDxcBlob* blob : blobs) {
         if (!blob) continue;
 
+        DxcBuffer reflectionData;
+        reflectionData.Ptr = blob->GetBufferPointer();
+        reflectionData.Size = blob->GetBufferSize();
+        reflectionData.Encoding = DXC_CP_ACP;
+
+        // IDxcUtils経由でリフレクションを作成
         ComPtr<ID3D12ShaderReflection> reflector;
-        D3DReflect(blob->GetBufferPointer(), blob->GetBufferSize(), IID_PPV_ARGS(&reflector));
+        HRESULT hr = dxcUtils->CreateReflection(&reflectionData, IID_PPV_ARGS(&reflector));
 
         D3D12_SHADER_DESC shaderDesc;
         reflector->GetDesc(&shaderDesc);

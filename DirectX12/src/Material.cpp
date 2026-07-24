@@ -4,15 +4,15 @@
 #include "GraphicsCore.h"
 #include "ShaderManager.h"
 
-Material::Material(const std::string& name,ID3DBlob* vsBlob, ID3DBlob* psBlob) {
+Material::Material(const std::string& VSname, const std::string& PSname) {
 
 	ID3D12Device* device = GraphicsCore::Get().GetDevice();
 
 	if (device == nullptr) {
 		throw std::runtime_error("Material::Material: device is null");
 	}
-    vsBlob = ShaderManager::Get().GetShaderProgram(name)->VS.Get();
-    psBlob = ShaderManager::Get().GetShaderProgram(name)->PS.Get();
+    IDxcBlob* vsBlob = ShaderManager::Get().GetShader(VSname);
+    IDxcBlob* psBlob = ShaderManager::Get().GetShader(PSname);
 
     // シェーダーを解析してRoot Signatureと変数オフセットを取得
     metadata = ShaderReflection::Reflect(vsBlob,psBlob, device);
@@ -26,21 +26,8 @@ Material::Material(const std::string& name,ID3DBlob* vsBlob, ID3DBlob* psBlob) {
     PSOKey.disableCulling = false;
     PSOKey.rtvFormat = DXGI_FORMAT_R8G8B8A8_UNORM;
     PSOKey.dsvFormat = DXGI_FORMAT_D32_FLOAT;
-	if (vsBlob == nullptr) {
-        PSOKey.VS = ShaderManager::Get().GetShaderProgram(name)->VS.Get();
-    }
-    else
-    {
-        PSOKey.VS = vsBlob;
-    }
-
-	if (psBlob == nullptr) {
-		PSOKey.PS = ShaderManager::Get().GetShaderProgram(name)->PS.Get();
-	}
-    else
-    {
-        PSOKey.PS = psBlob;
-    }
+    PSOKey.VS = vsBlob;
+    PSOKey.PS = psBlob;
 }
 
 void Material::SetData(const std::string& name, const void* data, uint32_t size) {

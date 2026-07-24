@@ -1,6 +1,6 @@
 #pragma once
 #include <d3d12.h>
-#include <d3dcompiler.h>
+#include <dxcapi.h>
 #include <wrl/client.h>
 #include <string>
 #include <unordered_map>
@@ -33,5 +33,5 @@ struct ShaderMetadata {
 
 class ShaderReflection {
 public:
-    static ShaderMetadata Reflect(ID3DBlob* vsBlob, ID3DBlob* psBlob, ID3D12Device* device);
+    static ShaderMetadata Reflect(IDxcBlob* vsBlob, IDxcBlob* psBlob, ID3D12Device* device);
 };

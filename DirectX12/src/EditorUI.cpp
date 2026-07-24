@@ -22,16 +22,17 @@ void EditorUI::Initialize(HWND hwnd) {
     // ImGui用のSRVディスクリプタヒープを渡す
     handle = gfx.GetSrvHeapManager().Allocate();
 
-    is32 = ImGui_ImplWin32_Init(hwnd);
+    ImGui_ImplDX12_InitInfo init_info = {};
+    init_info.Device = gfx.GetDevice();
+    init_info.NumFramesInFlight = 2; // GraphicsCore::frameCount と一致させる
+    init_info.RTVFormat = gfx.GetBackBufferFormat();
+    init_info.CommandQueue = gfx.GetCommandQueue(); // グラフィックスコアのコマンドキューを共有
+    init_info.SrvDescriptorHeap = gfx.GetSrvHeapManager().GetHeap();
+    init_info.LegacySingleSrvCpuDescriptor = handle.CPUHandle; // 古いAPIとの互換性のためにこれらを使用
+    init_info.LegacySingleSrvGpuDescriptor = handle.GPUHandle;
 
-    is = ImGui_ImplDX12_Init(
-        gfx.GetDevice(),
-        2, // フレームバッファ数
-        gfx.GetBackBufferFormat(),
-        gfx.GetSrvHeapManager().GetHeap(),
-        handle.CPUHandle,
-        handle.GPUHandle
-    );
+    is32 = ImGui_ImplWin32_Init(hwnd);
+    is = ImGui_ImplDX12_Init(&init_info);
 
     ImGui::GetIO().Fonts->Build();
     if (!ImGui_ImplDX12_CreateDeviceObjects()) {

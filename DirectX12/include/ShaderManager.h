@@ -1,23 +1,12 @@
 #pragma once
 #include <d3d12.h>
-#include <d3dcompiler.h>
+#include <dxcapi.h> // FXC(d3dcompiler.h)からDXCへ変更
 #include <wrl/client.h>
 #include <string>
 #include <unordered_map>
+#include <vector>
 
 using Microsoft::WRL::ComPtr;
-
-// シェーダープログラムのバイナリを保持する構造体
-struct ShaderProgram {
-    ComPtr<ID3DBlob> VS;
-    ComPtr<ID3DBlob> PS;
-};
-
-// パイプラインステートとルートシグネチャをまとめたもの
-struct PipelineState {
-    ComPtr<ID3D12RootSignature> RootSignature;
-    ComPtr<ID3D12PipelineState> PSO;
-};
 
 class ShaderManager {
 public:
@@ -26,32 +15,37 @@ public:
         return instance;
     }
 
+    // DXCの初期化処理を追加するため、初期化で呼び出します
     void Initialize(ID3D12Device* _device);
 
-    // HLSLファイルをコンパイルして読み込む
-    void LoadShader(const std::string& name, const std::wstring& vsPath, const std::wstring& psPath);
-    void LoadPSShader(const std::string& name, const std::wstring& psPath);
-    void LoadVSShader(const std::string& name, const std::wstring& vsPath);
+    // DXCは引数にワイド文字列(L"...")を使うため、wchar_tに変更
+    void LoadShader(const std::string& name, const std::wstring& filePath, const wchar_t* entryPoint, const wchar_t* targetProfile);
+    void LoadVS(const std::string& name, const std::wstring& filePath);
+    void LoadPS(const std::string& name, const std::wstring& filePath);
 
-    // 読み込んだシェーダーを使ってPSOを生成する（標準的な3Dモデル用）
-    void CreateStandardPSO(const std::string& name, DXGI_FORMAT rtvFormat, DXGI_FORMAT dsvFormat);
-
-    PipelineState* GetPipelineState(const std::string& name) {
-        if (pipelines.count(name)) return &pipelines[name];
+    // ID3DBlobではなくIDxcBlobを返す
+    IDxcBlob* GetShader(const std::string& name) {
+        auto it = shaders.find(name);
+        if (it != shaders.end()) {
+            return it->second.Get();
+        }
         return nullptr;
     }
 
-	ShaderProgram* GetShaderProgram(const std::string& name) {
-		if (shaders.count(name)) return &shaders[name];
-		return nullptr;
+	IDxcUtils* GetDxcUtils() {
+		return dxcUtils.Get();
 	}
 
 private:
     ShaderManager() = default;
 
     ID3D12Device* device = nullptr;
-    std::unordered_map<std::string, ShaderProgram> shaders;
-    std::unordered_map<std::string, PipelineState> pipelines;
 
-    ComPtr<ID3DBlob> CompileShader(const std::wstring& filePath, const char* entryPoint, const char* targetProfile);
+    // DXCのコンパイラとユーティリティ
+    ComPtr<IDxcUtils> dxcUtils;
+    ComPtr<IDxcCompiler3> dxcCompiler;
+
+    std::unordered_map<std::string, ComPtr<IDxcBlob>> shaders;
+
+    ComPtr<IDxcBlob> CompileShader(const std::wstring& filePath, const wchar_t* entryPoint, const wchar_t* targetProfile);
 };

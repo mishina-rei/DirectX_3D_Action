@@ -2,6 +2,7 @@
 
 #include <stdexcept>
 #include "PSOCache.h"
+#include "ShaderManager.h"
 
 using Microsoft::WRL::ComPtr;
 
@@ -13,7 +14,7 @@ struct DynamicInputLayout {
 };
 
 // プロトタイプ宣言
-DynamicInputLayout GenerateInputLayoutFromVS(ID3DBlob* vsBlob);
+DynamicInputLayout GenerateInputLayoutFromVS(IDxcBlob* vsBlob);
 
 ID3D12PipelineState* PSOCache::GetOrCreatePSO(ID3D12Device* device, const PSOKey& key) {
     auto it = cache.find(key);
@@ -31,11 +32,6 @@ ID3D12PipelineState* PSOCache::GetOrCreatePSO(ID3D12Device* device, const PSOKey
     psoDesc.PS = { reinterpret_cast<UINT8*>(key.PS->GetBufferPointer()), key.PS->GetBufferSize() };
 
     // --- 頂点レイアウト (エンジン標準の3Dモデル用と仮定) ---
-    //D3D12_INPUT_ELEMENT_DESC inputElementDescs[] = {
-    //    { "POSITION", 0, DXGI_FORMAT_R32G32B32_FLOAT, 0, 0,  D3D12_INPUT_CLASSIFICATION_PER_VERTEX_DATA, 0 },
-    //    { "NORMAL",   0, DXGI_FORMAT_R32G32B32_FLOAT, 0, 12, D3D12_INPUT_CLASSIFICATION_PER_VERTEX_DATA, 0 },
-    //    { "TEXCOORD", 0, DXGI_FORMAT_R32G32_FLOAT,    0, 24, D3D12_INPUT_CLASSIFICATION_PER_VERTEX_DATA, 0 }
-    //};
     auto dynamicLayout = GenerateInputLayoutFromVS(key.VS);
 
     psoDesc.InputLayout = { dynamicLayout.Elements.data(), (UINT)(dynamicLayout.Elements.size()) };
@@ -132,12 +128,22 @@ DXGI_FORMAT DetermineFormat(BYTE mask, D3D_REGISTER_COMPONENT_TYPE componentType
 }
 
 // 頂点シェーダーのBlobからInputLayoutを自動生成する関数
-DynamicInputLayout GenerateInputLayoutFromVS(ID3DBlob* vsBlob) {
+DynamicInputLayout GenerateInputLayoutFromVS(IDxcBlob* vsBlob) {
     DynamicInputLayout layout;
+	IDxcUtils* dxcUtils = ShaderManager::Get().GetDxcUtils();
+    // 1. DXC用のバッファ構造体を準備
+    DxcBuffer reflectionData;
+    reflectionData.Ptr = vsBlob->GetBufferPointer();
+    reflectionData.Size = vsBlob->GetBufferSize();
+    reflectionData.Encoding = DXC_CP_ACP;
 
-	// リフレクションを使ってシェーダーの入力パラメータを取得
+    // 2. DXCのインターフェース経由でリフレクションを取得
     Microsoft::WRL::ComPtr<ID3D12ShaderReflection> reflector;
-    D3DReflect(vsBlob->GetBufferPointer(), vsBlob->GetBufferSize(), IID_PPV_ARGS(&reflector));
+    HRESULT hr = dxcUtils->CreateReflection(&reflectionData, IID_PPV_ARGS(&reflector));
+    if (FAILED(hr)) {
+        // 必要に応じてエラーハンドリング
+        throw std::runtime_error("Failed to create shader reflection.");
+    }
 
     D3D12_SHADER_DESC shaderDesc;
     reflector->GetDesc(&shaderDesc);
@@ -153,7 +159,6 @@ DynamicInputLayout GenerateInputLayoutFromVS(ID3DBlob* vsBlob) {
         layout.SemanticNames.push_back(paramDesc.SemanticName);
 
         D3D12_INPUT_ELEMENT_DESC element = {};
-        //element.SemanticName = layout.SemanticNames.back().c_str(); // コピーした文字列のポインタを渡す
         element.SemanticIndex = paramDesc.SemanticIndex;
         element.InputSlot = 0; // 基本は0スロット
 

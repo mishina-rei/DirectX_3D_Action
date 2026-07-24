@@ -15,6 +15,7 @@
 #include <D3D12helper/d3dx12.h>
 #include <wrl/client.h>
 #include <memory>
+#include <dxcapi.h> // FXC(d3dcompiler.h)からDXCへ変更
 #include <d3dcompiler.h>
 
 #pragma comment(lib, "d3d12.lib")

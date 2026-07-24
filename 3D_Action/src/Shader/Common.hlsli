@@ -7,12 +7,12 @@ cbuffer CameraCB : register(b0)
     //float padding;
 };
 
-//cbuffer ModelCB : register(b1)
-//{
-//    matrix world;
-//};
-//
-//
+cbuffer ModelCB : register(b1)
+{
+    matrix dworld;
+};
+
+
 struct VSInput
 {
     float3 pos : POSITION;

@@ -6,8 +6,8 @@
 // PSO生成に必要なキー情報
 struct PSOKey {
     ID3D12RootSignature* rootSig;
-    ID3DBlob* VS;
-    ID3DBlob* PS;
+    IDxcBlob* VS;
+    IDxcBlob* PS;
     bool isTransparent;
     bool disableCulling;
     DXGI_FORMAT rtvFormat;
@@ -26,6 +26,7 @@ struct PSOKeyHasher {
         size_t h = 0;
         h ^= std ::hash<void*>{}(k.rootSig) + 0x9e3779b9 + (h << 6) + (h >> 2);
         h ^= std::hash<void*>{}(k.VS) + 0x9e3779b9 + (h << 6) + (h >> 2);
+        h ^= std::hash<void*>{}(k.PS) + 0x9e3779b9 + (h << 6) + (h >> 2);
         h ^= std::hash<bool>{}(k.isTransparent) + 0x9e3779b9 + (h << 6) + (h >> 2);
         return h;
     }

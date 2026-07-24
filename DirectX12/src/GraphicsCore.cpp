@@ -161,6 +161,10 @@ void GraphicsCore::BeginFrame() {
         ThrowIfFailed(fence->SetEventOnCompletion(frameFenceValues[frameIndex], fenceEvent));
         WaitForSingleObject(fenceEvent, INFINITE);
     }
+
+    // GPUが完了した最新のフェンス値を渡し、使用済みのリングバッファ領域を解放する
+    constantBufferPool.SyncCompletedFrames(fence->GetCompletedValue());
+
     commandContext.BeginFrame(commandAllocators[frameIndex].Get());
 
     // バックバッファを PRESENT -> RENDER_TARGET に遷移
@@ -197,6 +201,10 @@ void GraphicsCore::EndFrame() {
     // これにより次回同じフレームのアロケータを再利用する前にGPU完了を待てる
     const uint64_t currentFence = fenceValue;
     ThrowIfFailed(commandQueue->Signal(fence.Get(), currentFence));
+
+    // このフレームでアロケートしたサイズと、それに紐づくフェンス値を記録する
+    constantBufferPool.FinishFrame(currentFence);
+
     frameFenceValues[frameIndex] = currentFence;
     fenceValue++;
 
