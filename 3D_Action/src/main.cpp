@@ -1,6 +1,7 @@
 #include <windows.h>
 
 #include "DirectX12.h"
+#include "ModelLoader.h"
 
 // ImGuiのWin32メッセージハンドラを宣言
 extern IMGUI_IMPL_API LRESULT ImGui_ImplWin32_WndProcHandler(HWND hWnd, UINT msg, WPARAM wParam, LPARAM lParam);
@@ -120,6 +121,8 @@ int WINAPI WinMain(HINSTANCE hInstance, HINSTANCE, LPSTR, int nCmdShow) {
     // マテリアル
     auto cubeMaterial = std::make_shared<Material>("VS_Standard", "PS_Standard");
 
+	std::vector<MeshData> meshes = ModelLoader::LoadFBX("..\\DirectX12\\Assets\\gun\\sniper_0.fbx");    
+
     auto& gfx = GraphicsCore::Get();
     auto ictx = gfx.GetCommandContext();
 
@@ -127,11 +130,13 @@ int WINAPI WinMain(HINSTANCE hInstance, HINSTANCE, LPSTR, int nCmdShow) {
 
     // 内部でAssimpがパースし、ctx に対して CopyBufferRegion 命令を積みます
 	Mesh mesh = Mesh();
-    mesh.Initialize<Vertex>(gfx.GetDevice(),&ictx,vertices, indices);
+    mesh.Create(meshes[0].vertices.data(), meshes[0].vertices.size(), sizeof(Vertex), meshes[0].indices.data(), meshes[0].indices.size());
 
     ictx.EndFrame();
 
     gfx.FlushCommandQueue();
+
+    mesh.FreeUploadBuffers();
 
     // ImGui用の一時変数
     DirectX::XMFLOAT4 cubeColor = { 0.2f, 0.6f, 0.9f, 1.0f };

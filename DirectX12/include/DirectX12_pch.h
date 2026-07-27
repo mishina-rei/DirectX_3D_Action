@@ -17,6 +17,7 @@
 #include <memory>
 #include <dxcapi.h> // FXC(d3dcompiler.h)からDXCへ変更
 #include <d3dcompiler.h>
+#include <stdexcept>
 
 #pragma comment(lib, "d3d12.lib")
 #pragma comment(lib, "dxgi.lib")    // 今後 DXGI 関連のエラー（CreateDXGIFactory など）が出るのを防ぐため

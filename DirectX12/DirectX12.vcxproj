@@ -59,6 +59,7 @@
     <ClInclude Include="include\imstb_truetype.h" />
     <ClInclude Include="include\Material.h" />
     <ClInclude Include="include\Mesh.h" />
+    <ClInclude Include="include\ModelLoader.h" />
     <ClInclude Include="include\PSOCache.h" />
     <ClInclude Include="include\ShaderManager.h" />
     <ClInclude Include="include\ShaderReflection.h" />
