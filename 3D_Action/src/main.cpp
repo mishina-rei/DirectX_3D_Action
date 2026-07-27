@@ -2,6 +2,7 @@
 
 #include "DirectX12.h"
 #include "ModelLoader.h"
+#include "Model.h"
 
 // ImGuiのWin32メッセージハンドラを宣言
 extern IMGUI_IMPL_API LRESULT ImGui_ImplWin32_WndProcHandler(HWND hWnd, UINT msg, WPARAM wParam, LPARAM lParam);
@@ -123,6 +124,8 @@ int WINAPI WinMain(HINSTANCE hInstance, HINSTANCE, LPSTR, int nCmdShow) {
 
 	std::vector<MeshData> meshes = ModelLoader::LoadFBX("..\\DirectX12\\Assets\\gun\\sniper_0.fbx");    
 
+    Model playerModel;
+
     auto& gfx = GraphicsCore::Get();
     auto ictx = gfx.GetCommandContext();
 
@@ -132,10 +135,13 @@ int WINAPI WinMain(HINSTANCE hInstance, HINSTANCE, LPSTR, int nCmdShow) {
 	Mesh mesh = Mesh();
     mesh.Create(meshes[0].vertices.data(), meshes[0].vertices.size(), sizeof(Vertex), meshes[0].indices.data(), meshes[0].indices.size());
 
+    playerModel.CreateFromFile("..\\DirectX12\\Assets\\gun\\sniper_0.fbx");
+
     ictx.EndFrame();
 
     gfx.FlushCommandQueue();
 
+    playerModel.FreeUploadBuffers();
     mesh.FreeUploadBuffers();
 
     // ImGui用の一時変数
@@ -201,7 +207,7 @@ int WINAPI WinMain(HINSTANCE hInstance, HINSTANCE, LPSTR, int nCmdShow) {
             ctx->GetCommandList()->SetDescriptorHeaps(_countof(ppHeaps), ppHeaps);
 
             // マテリアルをバインド（裏側でリングバッファの確保とmemcpy、PSOセットが走る）
-            cubeMaterial->Bind();
+            //cubeMaterial->Bind();
 
             // 描画範囲（ビューポート）と切り抜き範囲（シザー矩形）を画面サイズに設定
             D3D12_VIEWPORT viewport = { 0.0f, 0.0f, 1920.0f, 1080.0f, 0.0f, 1.0f };
@@ -211,14 +217,16 @@ int WINAPI WinMain(HINSTANCE hInstance, HINSTANCE, LPSTR, int nCmdShow) {
             ctx->GetCommandList()->RSSetScissorRects(1, &scissorRect);
 
             // 頂点・インデックスバッファのセット
-            ctx->GetCommandList()->IASetVertexBuffers(0, 1, &mesh.GetVertexBufferView());
-            ctx->GetCommandList()->IASetIndexBuffer(&mesh.GetIndexBufferView());
+            //ctx->GetCommandList()->IASetVertexBuffers(0, 1, &mesh.GetVertexBufferView());
+            //ctx->GetCommandList()->IASetIndexBuffer(&mesh.GetIndexBufferView());
             ctx->GetCommandList()->IASetPrimitiveTopology(D3D_PRIMITIVE_TOPOLOGY_TRIANGLELIST);
+
+			playerModel.Draw(*cubeMaterial.get());
 
             D3D12_CPU_DESCRIPTOR_HANDLE rtvHandle = gfx.GetRtvHandle();
             D3D12_CPU_DESCRIPTOR_HANDLE dsvHandle = gfx.GetDsvHandle();
 
-            ctx->GetCommandList()->DrawIndexedInstanced(mesh.GetIndexCount(), 1, 0, 0, 0);
+            //ctx->GetCommandList()->DrawIndexedInstanced(mesh.GetIndexCount(), 1, 0, 0, 0);
 
 
 

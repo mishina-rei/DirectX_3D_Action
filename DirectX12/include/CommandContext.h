@@ -30,6 +30,8 @@ public:
     void SetPrimitiveTopology(D3D_PRIMITIVE_TOPOLOGY topology);     // プリミティブトポロジーの設定
     void DrawInstanced(uint32_t vertexCount, uint32_t instanceCount, uint32_t startVertex, uint32_t startInstance);     // インスタンス描画
     void DrawIndexedInstanced(uint32_t indexCount, uint32_t instanceCount, uint32_t startIndex, int32_t baseVertex, uint32_t startInstance);    // インデックス付きインスタンス描画
+	void SetVertexBuffer(UINT slot, const D3D12_VERTEX_BUFFER_VIEW& vbView);            // 頂点バッファの設定
+	void SetIndexBuffer(const D3D12_INDEX_BUFFER_VIEW& ibView);                         // インデックスバッファの設定
 
     // ゲッター（ImGuiのバックエンドに渡す用など）
     ID3D12GraphicsCommandList* GetCommandList() const { return commandList.Get(); }

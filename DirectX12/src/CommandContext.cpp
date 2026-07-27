@@ -114,3 +114,10 @@ void CommandContext::DrawIndexedInstanced(uint32_t indexCount, uint32_t instance
 {
     commandList->DrawIndexedInstanced(indexCount, instanceCount, startIndex, baseVertex, startInstance);
 }
+void CommandContext::SetVertexBuffer(UINT slot, const D3D12_VERTEX_BUFFER_VIEW& vbView) {
+    commandList->IASetVertexBuffers(slot, 1, &vbView);
+}
+
+void CommandContext::SetIndexBuffer(const D3D12_INDEX_BUFFER_VIEW& ibView) {
+    commandList->IASetIndexBuffer(&ibView);
+}

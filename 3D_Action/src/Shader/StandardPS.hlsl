@@ -1,13 +1,13 @@
 // StandardPS.hlsl
 #include "Common.hlsli"
 
-//Texture2D MainTex : register(t0);
-//SamplerState MainSampler : register(s0);
+Texture2D MainTex : register(t0);
+SamplerState MainSampler : register(s0);
 
 float4 main(PSInput input) : SV_TARGET
 {
-    //float4 texColor = MainTex.Sample(MainSampler, input.uv);
-    float4 texColor = float4(1.0f, 1.0f, 0.0f, 1.0f);
+    float4 texColor = MainTex.Sample(MainSampler, input.uv);
+    //float4 texColor = float4(1.0f, 1.0f, 0.0f, 1.0f);
     
     float3 normal = normalize(input.normal);
     //float3 lightVec = normalize(-lightDir);

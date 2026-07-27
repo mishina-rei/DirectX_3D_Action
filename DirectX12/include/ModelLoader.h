@@ -1,3 +1,5 @@
+#pragma once
+
 #include <assimp/Importer.hpp>
 #include <assimp/scene.h>
 #include <assimp/postprocess.h>
@@ -51,7 +53,7 @@ public:
     static std::vector<MeshData> LoadFBX(const std::string& filePath) {
         Assimp::Importer importer;
 
-        // 【超重要】DirectX12向けに左手座標系に変換(ConvertToLeftHanded)し、
+        // DirectX12向けに左手座標系に変換(ConvertToLeftHanded)し、
         // 多角形ポリゴンを三角形に分割(Triangulate)するフラグを渡す
         const aiScene* scene = importer.ReadFile(filePath,
             aiProcess_Triangulate |
@@ -73,7 +75,7 @@ public:
             aiMesh* ai_mesh = scene->mMeshes[i];
             MeshData meshData;
 
-            // ① 頂点データの抽出
+            // 頂点データの抽出
             for (unsigned int v = 0; v < ai_mesh->mNumVertices; ++v) {
                 VERTEX vertex;
                 // 位置
@@ -98,7 +100,7 @@ public:
                 meshData.vertices.push_back(vertex);
             }
 
-            // ② インデックスデータの抽出
+            // インデックスデータの抽出
             for (unsigned int f = 0; f < ai_mesh->mNumFaces; ++f) {
                 aiFace face = ai_mesh->mFaces[f];
                 for (unsigned int ind = 0; ind < face.mNumIndices; ++ind) {
@@ -106,7 +108,7 @@ public:
                 }
             }
 
-            // ③ マテリアル（テクスチャパス）の抽出
+            // マテリアル（テクスチャパス）の抽出
             if (ai_mesh->mMaterialIndex >= 0) {
                 aiMaterial* material = scene->mMaterials[ai_mesh->mMaterialIndex];
                 aiString texPath;

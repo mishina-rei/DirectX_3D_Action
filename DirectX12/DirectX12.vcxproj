@@ -33,6 +33,7 @@
     <ClCompile Include="src\GraphicsCore.cpp" />
     <ClCompile Include="src\Material.cpp" />
     <ClCompile Include="src\Mesh.cpp" />
+    <ClCompile Include="src\Model.cpp" />
     <ClCompile Include="src\pch.cpp">
       <PrecompiledHeader Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">Create</PrecompiledHeader>
       <PrecompiledHeader Condition="'$(Configuration)|$(Platform)'=='Release|x64'">Create</PrecompiledHeader>
@@ -40,6 +41,7 @@
     <ClCompile Include="src\PSOCache.cpp" />
     <ClCompile Include="src\ShaderManager.cpp" />
     <ClCompile Include="src\ShaderReflection.cpp" />
+    <ClCompile Include="src\Texture.cpp" />
     <ClCompile Include="src\UploadRingBuffer.cpp" />
   </ItemGroup>
   <ItemGroup>
@@ -59,10 +61,12 @@
     <ClInclude Include="include\imstb_truetype.h" />
     <ClInclude Include="include\Material.h" />
     <ClInclude Include="include\Mesh.h" />
+    <ClInclude Include="include\Model.h" />
     <ClInclude Include="include\ModelLoader.h" />
     <ClInclude Include="include\PSOCache.h" />
     <ClInclude Include="include\ShaderManager.h" />
     <ClInclude Include="include\ShaderReflection.h" />
+    <ClInclude Include="include\Texture.h" />
     <ClInclude Include="include\UploadRingBuffer.h" />
   </ItemGroup>
   <PropertyGroup Label="Globals">
@@ -177,7 +181,8 @@
       <EnableSegmentHeap>true</EnableSegmentHeap>
     </Manifest>
     <Lib>
-      <AdditionalLibraryDirectories>$(SolutionDir)library</AdditionalLibraryDirectories>
+      <AdditionalLibraryDirectories>
+      </AdditionalLibraryDirectories>
     </Lib>
   </ItemDefinitionGroup>
   <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Release|x64'">
@@ -202,7 +207,8 @@
       <EnableSegmentHeap>true</EnableSegmentHeap>
     </Manifest>
     <Lib>
-      <AdditionalLibraryDirectories>$(SolutionDir)library</AdditionalLibraryDirectories>
+      <AdditionalLibraryDirectories>
+      </AdditionalLibraryDirectories>
     </Lib>
   </ItemDefinitionGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />
