@@ -26,6 +26,7 @@
     <ClCompile Include="..\library\imgui\imgui_impl_win32.cpp" />
     <ClCompile Include="..\library\imgui\imgui_tables.cpp" />
     <ClCompile Include="..\library\imgui\imgui_widgets.cpp" />
+    <ClCompile Include="src\Animator.cpp" />
     <ClCompile Include="src\CommandContext.cpp" />
     <ClCompile Include="src\DescriptorHeapManager.cpp" />
     <ClCompile Include="src\DirectX12.cpp" />
@@ -34,6 +35,7 @@
     <ClCompile Include="src\Material.cpp" />
     <ClCompile Include="src\Mesh.cpp" />
     <ClCompile Include="src\Model.cpp" />
+    <ClCompile Include="src\ModelLoader.cpp" />
     <ClCompile Include="src\pch.cpp">
       <PrecompiledHeader Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">Create</PrecompiledHeader>
       <PrecompiledHeader Condition="'$(Configuration)|$(Platform)'=='Release|x64'">Create</PrecompiledHeader>
@@ -45,6 +47,7 @@
     <ClCompile Include="src\UploadRingBuffer.cpp" />
   </ItemGroup>
   <ItemGroup>
+    <ClInclude Include="include\Animator.h" />
     <ClInclude Include="include\CommandContext.h" />
     <ClInclude Include="include\DescriptorHeapManager.h" />
     <ClInclude Include="include\DirectX12.h" />

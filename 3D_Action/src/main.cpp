@@ -3,6 +3,7 @@
 #include "DirectX12.h"
 #include "ModelLoader.h"
 #include "Model.h"
+#include "Animator.h"
 
 // ImGuiのWin32メッセージハンドラを宣言
 extern IMGUI_IMPL_API LRESULT ImGui_ImplWin32_WndProcHandler(HWND hWnd, UINT msg, WPARAM wParam, LPARAM lParam);
@@ -122,9 +123,28 @@ int WINAPI WinMain(HINSTANCE hInstance, HINSTANCE, LPSTR, int nCmdShow) {
     // マテリアル
     auto cubeMaterial = std::make_shared<Material>("VS_Standard", "PS_Standard");
 
-	std::vector<MeshData> meshes = ModelLoader::LoadFBX("..\\DirectX12\\Assets\\gun\\sniper_0.fbx");    
+    //std::vector<MeshData> meshes = ModelLoader::LoadFBX("..\\DirectX12\\Assets\\gun\\sniper_0.fbx");    
+    auto datas = ModelLoader::LoadFBX("..\\DirectX12\\Assets\\Anim_Voletir_06_OpenVault_Idle.fbx");
+    auto meshDatas = ModelLoader::LoadFBX("..\\DirectX12\\Assets\\voletir.fbx");
+
+    //if (!meshDatas.meshes.empty() && !meshDatas.meshes[0].vertices.empty()) {
+    //    float checkWeight = meshDatas.meshes[0].vertices[0].BoneWeights[0];
+    //    int checkID = meshDatas.meshes[0].vertices[0].BoneIDs[0];
+    //    OutputDebugStringA(("Vertex[0] ID: " + std::to_string(checkID) + " Weight: " + std::to_string(checkWeight) + "\n").c_str());
+    //}
 
     Model playerModel;
+
+    // 2. アニメーターの初期化
+    Animator playerAnimator;
+    // FBXにアニメーションが含まれている場合、最初のクリップを再生
+    if (!datas.animations.empty()) {
+        playerAnimator.Initialize(
+            &datas.animations[0],
+            &meshDatas.rootNode,
+            &meshDatas.meshes[0].BoneInfoMap // 最初のメッシュのボーンMapを使用
+        );
+    }
 
     auto& gfx = GraphicsCore::Get();
     auto ictx = gfx.GetCommandContext();
@@ -133,16 +153,17 @@ int WINAPI WinMain(HINSTANCE hInstance, HINSTANCE, LPSTR, int nCmdShow) {
 
     // 内部でAssimpがパースし、ctx に対して CopyBufferRegion 命令を積みます
 	Mesh mesh = Mesh();
-    mesh.Create(meshes[0].vertices.data(), meshes[0].vertices.size(), sizeof(Vertex), meshes[0].indices.data(), meshes[0].indices.size());
+    //mesh.Create(meshes[0].vertices.data(), meshes[0].vertices.size(), sizeof(Vertex), meshes[0].indices.data(), meshes[0].indices.size());
 
-    playerModel.CreateFromFile("..\\DirectX12\\Assets\\gun\\sniper_0.fbx");
-
+    //playerModel.CreateFromFile("..\\DirectX12\\Assets\\gun\\sniper_0.fbx");
+    playerModel.CreateFromFile("..\\DirectX12\\Assets\\voletir.fbx");
+  
     ictx.EndFrame();
 
     gfx.FlushCommandQueue();
 
     playerModel.FreeUploadBuffers();
-    mesh.FreeUploadBuffers();
+    //mesh.FreeUploadBuffers();
 
     // ImGui用の一時変数
     DirectX::XMFLOAT4 cubeColor = { 0.2f, 0.6f, 0.9f, 1.0f };
@@ -177,9 +198,14 @@ int WINAPI WinMain(HINSTANCE hInstance, HINSTANCE, LPSTR, int nCmdShow) {
             //ctx->SetPipelineState(psoState->PSO.Get());
             //ctx->SetRootSignature(psoState->RootSignature.Get());
 
+            // 1. アニメーションの計算 (dtは前フレームからの経過時間。例: 0.016f)
+            playerAnimator.UpdateAnimation(0.016f);
+
+            // 2. 計算結果のボーン行列配列を取得
+            const auto& boneMatrices = playerAnimator.GetFinalBoneMatrices();
             
             // 1. ビュー行列（カメラの位置と向き）
-            DirectX::XMVECTOR eye = DirectX::XMVectorSet(0.0f, 2.0f, -5.0f, 0.0f); // カメラをZ軸の手前(-5)、少し上(2)に配置
+            DirectX::XMVECTOR eye = DirectX::XMVectorSet(0.0f, -5.0f, -5.0f, 0.0f); // カメラをZ軸の手前(-5)、少し上(2)に配置
             DirectX::XMVECTOR target = DirectX::XMVectorSet(0.0f, 0.0f, 0.0f, 0.0f); // キューブの中心（原点）を見る
             DirectX::XMVECTOR up = DirectX::XMVectorSet(0.0f, 1.0f, 0.0f, 0.0f); // 上はY方向
             DirectX::XMMATRIX view = DirectX::XMMatrixLookAtLH(eye, target, up);
@@ -199,8 +225,14 @@ int WINAPI WinMain(HINSTANCE hInstance, HINSTANCE, LPSTR, int nCmdShow) {
             auto worldTransposed = DirectX::XMMatrixTranspose(world);
 
             // 3. マテリアルへのデータセット（名前ベース！）
-            cubeMaterial->SetMatrix("viewProjection", viewProjTransposed);
-            cubeMaterial->SetMatrix("world", worldTransposed);
+            cubeMaterial->SetMatrix("viewProjection", viewProj);
+            cubeMaterial->SetMatrix("world", world);
+
+            if (!boneMatrices.empty()) {
+
+                // データサイズ = 行列のサイズ(64バイト) × ボーンの数
+                cubeMaterial->SetData("boneTransforms", boneMatrices.data(), sizeof(DirectX::XMMATRIX) * boneMatrices.size());
+            }
 
             // ディスクリプタヒープをセット
             ID3D12DescriptorHeap* ppHeaps[] = { gfx.GetSrvHeapManager().GetHeap() };

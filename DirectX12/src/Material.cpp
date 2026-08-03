@@ -26,7 +26,7 @@ Material::Material(const std::string& VSname, const std::string& PSname) {
     PSOKey.disableCulling = false;
     PSOKey.rtvFormat = DXGI_FORMAT_R8G8B8A8_UNORM;
     PSOKey.dsvFormat = DXGI_FORMAT_D32_FLOAT;
-    PSOKey.VS = vsBlob;
+    PSOKey.VS = vsBlob; 
     PSOKey.PS = psBlob;
 }
 

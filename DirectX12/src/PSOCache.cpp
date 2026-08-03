@@ -131,13 +131,13 @@ DXGI_FORMAT DetermineFormat(BYTE mask, D3D_REGISTER_COMPONENT_TYPE componentType
 DynamicInputLayout GenerateInputLayoutFromVS(IDxcBlob* vsBlob) {
     DynamicInputLayout layout;
 	IDxcUtils* dxcUtils = ShaderManager::Get().GetDxcUtils();
-    // 1. DXC用のバッファ構造体を準備
+    // DXC用のバッファ構造体を準備
     DxcBuffer reflectionData;
     reflectionData.Ptr = vsBlob->GetBufferPointer();
     reflectionData.Size = vsBlob->GetBufferSize();
     reflectionData.Encoding = DXC_CP_ACP;
 
-    // 2. DXCのインターフェース経由でリフレクションを取得
+    // DXCのインターフェース経由でリフレクションを取得
     Microsoft::WRL::ComPtr<ID3D12ShaderReflection> reflector;
     HRESULT hr = dxcUtils->CreateReflection(&reflectionData, IID_PPV_ARGS(&reflector));
     if (FAILED(hr)) {

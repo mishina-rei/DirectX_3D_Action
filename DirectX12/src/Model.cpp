@@ -2,6 +2,7 @@
 #include "Model.h"
 #include "GraphicsCore.h"
 #include "Material.h"
+#include <filesystem> 
 
 void Model::CreateFromFile(const std::string& filePath) {
 
@@ -10,7 +11,7 @@ void Model::CreateFromFile(const std::string& filePath) {
     ID3D12GraphicsCommandList* cmdList = GraphicsCore::Get().GetCommandList();
 
     // CPU側でFBXを解析してデータを抽出 (さっき作ったローダーを使用)
-    std::vector<MeshData> loadedData = ModelLoader::LoadFBX(filePath);
+    std::vector<MeshData> loadedData = ModelLoader::LoadFBX(filePath).meshes;
 
     // 抽出されたメッシュの数だけGPUバッファ(Meshクラス)を生成
     meshes.resize(loadedData.size());
@@ -30,7 +31,17 @@ void Model::CreateFromFile(const std::string& filePath) {
 
         // テクスチャパスがあればロード
         if (!data.material.DiffuseTexturePath.empty()) {
-            std::string texPathUtf8 = directory + data.material.DiffuseTexturePath;
+			// パスからファイル名だけを抽出するために、std::string を使って処理
+            std::string rawStr = data.material.DiffuseTexturePath;
+
+            // パス区切り文字（\ または /）が最後に現れる位置を探す
+            size_t pos = rawStr.find_last_of("/\\");
+
+            // 区切り文字が見つかればそれ以降を、見つからなければそのまま文字列を使う
+            std::string fileName = (pos == std::string::npos) ? rawStr : rawStr.substr(pos + 1);
+
+            // FBXのディレクトリとファイル名を結合
+            std::string texPathUtf8 = directory + fileName;
 
             // DirectXTex用に std::string -> std::wstring 変換
             int size_needed = MultiByteToWideChar(CP_UTF8, 0, &texPathUtf8[0], (int)texPathUtf8.size(), NULL, 0);

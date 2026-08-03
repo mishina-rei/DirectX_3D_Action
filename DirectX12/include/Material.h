@@ -21,6 +21,9 @@ public:
     void SetVector(const std::string& name, DirectX::XMFLOAT4 value);
     void SetMatrix(const std::string& name, const DirectX::XMMATRIX& value);
 
+    // 内部データ書き込みヘルパー
+    void SetData(const std::string& name, const void* data, uint32_t size);
+
     // テクスチャのセット (GPUハンドルを渡す)
     void SetTexture(D3D12_GPU_DESCRIPTOR_HANDLE textureGpuHandle);
 
@@ -39,6 +42,4 @@ private:
     // バインド予定のテクスチャ
     D3D12_GPU_DESCRIPTOR_HANDLE currentTexture = { 0 };
 
-    // 内部データ書き込みヘルパー
-    void SetData(const std::string& name, const void* data, uint32_t size);
 };

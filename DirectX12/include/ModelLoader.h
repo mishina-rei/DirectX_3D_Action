@@ -7,6 +7,7 @@
 #include <DirectXMath.h>
 #include <vector>
 #include <string>
+#include <unordered_map>
 
 
 #if _MSC_VER >= 1930
@@ -29,11 +30,24 @@
 #endif
 #endif
 
+constexpr int MAX_BONE_INFLUENCE = 4;  // 1頂点に影響するボーンの最大数
+
 // 1頂点のデータ
 struct VERTEX {
     DirectX::XMFLOAT3 Position;
     DirectX::XMFLOAT3 Normal;
     DirectX::XMFLOAT2 TexCoord;
+    // アニメーション用の追加データ
+    int BoneIDs[MAX_BONE_INFLUENCE];
+    float BoneWeights[MAX_BONE_INFLUENCE];
+
+    VERTEX() {
+        // シェーダーで配列外参照してクラッシュするのを防ぐ
+        for (int i = 0; i < MAX_BONE_INFLUENCE; i++) {
+            BoneIDs[i] = -1;       // -1 は影響ボーンなし
+            BoneWeights[i] = 0.0f;
+        }
+    }
 };
 
 // マテリアル情報（とりあえず今回はディフューズテクスチャのパスだけ）
@@ -41,87 +55,101 @@ struct MaterialData {
     std::string DiffuseTexturePath;
 };
 
-// 1つのメッシュ（FBXの中に複数のメッシュが含まれることが多い）
+struct BoneInfo {
+    int id; // 最終的にシェーダーに送る行列配列のインデックス
+    DirectX::XMMATRIX offsetMatrix; // ボーン空間へ変換するための行列（Inverse Bind Matrix）
+};
+
+// 1つのメッシュ
 struct MeshData {
     std::vector<VERTEX> vertices;
     std::vector<uint32_t> indices;
     MaterialData material;
+
+    // ボーン名とボーン情報のマップ
+    std::unordered_map<std::string, BoneInfo> BoneInfoMap;
+    int BoneCounter = 0; // ボーンの総数
 };
+
+// -------------------------------------------------
+// キーフレーム構造体
+// -------------------------------------------------
+struct KeyPosition {
+    DirectX::XMFLOAT3 position;
+    float timeStamp;
+};
+
+struct KeyRotation {
+    DirectX::XMFLOAT4 orientation; // クォータニオン(x, y, z, w)
+    float timeStamp;
+};
+
+struct KeyScale {
+    DirectX::XMFLOAT3 scale;
+    float timeStamp;
+};
+
+// -------------------------------------------------
+// 1つのボーン（ノード）のアニメーション軌跡
+// -------------------------------------------------
+struct BoneAnimationTrack {
+    std::string boneName;
+    std::vector<KeyPosition> positions;
+    std::vector<KeyRotation> rotations;
+    std::vector<KeyScale> scales;
+};
+
+// -------------------------------------------------
+// アニメーションクリップ全体（例：「Walk」「Run」など）
+// -------------------------------------------------
+struct AnimationClip {
+    std::string name;
+    float duration;       // アニメーションの総時間（ティック数）
+    float ticksPerSecond; // 1秒あたりのティック数（再生速度の基準）
+
+    std::vector<BoneAnimationTrack> boneTracks;
+
+    // アニメーション計算時に「ボーン名」から高速にトラックを探せるようにする辞書
+    std::unordered_map<std::string, int> boneNameToTrackIndex;
+};
+
+// ボーンの親子関係（階層構造）を保持するノード
+struct NodeData {
+    std::string name;
+    DirectX::XMMATRIX transformation; // そのノードの初期ローカル行列
+    std::vector<NodeData> children;   // 子ノードの配列
+};
+
+// 読み込んだシーン全体のデータ
+struct LoadedSceneData {
+    std::vector<MeshData> meshes;
+    std::vector<AnimationClip> animations;
+    NodeData rootNode;
+};
+
 
 class ModelLoader {
 public:
-    static std::vector<MeshData> LoadFBX(const std::string& filePath) {
-        Assimp::Importer importer;
 
-        // DirectX12向けに左手座標系に変換(ConvertToLeftHanded)し、
-        // 多角形ポリゴンを三角形に分割(Triangulate)するフラグを渡す
-        const aiScene* scene = importer.ReadFile(filePath,
-            aiProcess_Triangulate |
-            aiProcess_ConvertToLeftHanded |
-            aiProcess_CalcTangentSpace);
+    // 頂点にボーンIDとウェイトを追加するヘルパー関数
+    static void SetVertexBoneData(VERTEX& vertex, int boneID, float weight);
 
-        if (!scene || scene->mFlags & AI_SCENE_FLAGS_INCOMPLETE || !scene->mRootNode) {
-            // エラー内容を変数に受けて、出力ウィンドウに表示する
-            std::string errorStr = importer.GetErrorString();
-            OutputDebugStringA(("Assimp Load Error: " + errorStr + "\n").c_str());
+    // Assimpの行列をDirectXMathの行列に変換するヘルパー関数
+    static DirectX::XMMATRIX ConvertMatrixToDirectXFormat(const aiMatrix4x4& from);
 
-            throw std::runtime_error("Assimp Load Error: " + errorStr);
-        }
+    // LoadFBX内のメッシュ抽出処理の追加部分
+    static void ExtractBoneWeights(std::vector<VERTEX>& vertices, aiMesh* mesh, MeshData& meshData);
+    
+    static LoadedSceneData LoadFBX(const std::string& filePath);
 
-        std::vector<MeshData> loadedMeshes;
+    // AssimpのVector3DをDirectXMathのXMFLOAT3に変換
+    static DirectX::XMFLOAT3 ConvertToXMFLOAT3(const aiVector3D& vec);
 
-        // シーン内のすべてのメッシュをループ
-        for (unsigned int i = 0; i < scene->mNumMeshes; ++i) {
-            aiMesh* ai_mesh = scene->mMeshes[i];
-            MeshData meshData;
+    // AssimpのQuaternionをDirectXMathのXMFLOAT4に変換
+    static DirectX::XMFLOAT4 ConvertToXMFLOAT4(const aiQuaternion& pOrientation);
 
-            // 頂点データの抽出
-            for (unsigned int v = 0; v < ai_mesh->mNumVertices; ++v) {
-                VERTEX vertex;
-                // 位置
-                vertex.Position = { ai_mesh->mVertices[v].x, ai_mesh->mVertices[v].y, ai_mesh->mVertices[v].z };
+    static std::vector<AnimationClip> ExtractAnimations(const aiScene* scene);
 
-                // 法線
-                if (ai_mesh->HasNormals()) {
-                    vertex.Normal = { ai_mesh->mNormals[v].x, ai_mesh->mNormals[v].y, ai_mesh->mNormals[v].z };
-                }
-                else {
-                    vertex.Normal = { 0.0f, 0.0f, 0.0f };
-                }
-
-                // UV座標 (テクスチャチャネル0番)
-                if (ai_mesh->mTextureCoords[0]) {
-                    vertex.TexCoord = { ai_mesh->mTextureCoords[0][v].x, ai_mesh->mTextureCoords[0][v].y };
-                }
-                else {
-                    vertex.TexCoord = { 0.0f, 0.0f };
-                }
-
-                meshData.vertices.push_back(vertex);
-            }
-
-            // インデックスデータの抽出
-            for (unsigned int f = 0; f < ai_mesh->mNumFaces; ++f) {
-                aiFace face = ai_mesh->mFaces[f];
-                for (unsigned int ind = 0; ind < face.mNumIndices; ++ind) {
-                    meshData.indices.push_back(face.mIndices[ind]);
-                }
-            }
-
-            // マテリアル（テクスチャパス）の抽出
-            if (ai_mesh->mMaterialIndex >= 0) {
-                aiMaterial* material = scene->mMaterials[ai_mesh->mMaterialIndex];
-                aiString texPath;
-                // ディフューズ（アルベド）テクスチャのパスを取得
-                if (material->GetTexture(aiTextureType_DIFFUSE, 0, &texPath) == aiReturn_SUCCESS) {
-                    // C++の文字列に変換して保持
-                    meshData.material.DiffuseTexturePath = texPath.C_Str();
-                }
-            }
-
-            loadedMeshes.push_back(meshData);
-        }
-
-        return loadedMeshes;
-    }
+    // aiNodeの階層を再帰的に自作のNodeDataに変換する関数
+    static NodeData ExtractNodeHierarchy(const aiNode* srcNode);
 };
