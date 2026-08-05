@@ -447,6 +447,8 @@ x86/
 
 # 外部ライブラリ
 library/
+*.dll
+*.lib
 
 # アセット
 Assets/

@@ -4,24 +4,15 @@
 // ただし、ここに一覧表示されているファイルは、ビルド間でいずれかが更新されると、すべてが再コンパイルされます。
 // 頻繁に更新するファイルをここに追加しないでください。追加すると、パフォーマンス上の利点がなくなります。
 
-#ifndef DIRECTX12_PCH_H
-#define DIRECTX12_PCH_H
+#ifndef ENGINE_PCH_H
+#define ENGINE_PCH_H
 
 // プリコンパイルするヘッダーをここに追加します
-#define WIN32_LEAN_AND_MEAN             // Windows ヘッダーからほとんど使用されていない部分を除外する
+#include "DirectX12.h"
 
-#include <d3d12.h>
-#include <dxgi1_6.h>
-#include <D3D12helper/d3dx12.h>
-#include <wrl/client.h>
-#include <memory>
-#include <dxcapi.h> // FXC(d3dcompiler.h)からDXCへ変更
-#include <d3dcompiler.h>
-#include <stdexcept>
+
+#include <DirectXMath.h>
 #include <vector>
+#include <unordered_map>
 
-#pragma comment(lib, "d3d12.lib")
-#pragma comment(lib, "dxgi.lib")    // 今後 DXGI 関連のエラー（CreateDXGIFactory など）が出るのを防ぐため
-#pragma comment(lib, "dxguid.lib")  // IID_ID3D12Device などのID解決エラーを防ぐため
-
-#endif //DIRECTX12_PCH_H
+#endif //ENGINE_PCH_H

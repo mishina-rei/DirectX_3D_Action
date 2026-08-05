@@ -1,4 +1,4 @@
-#include "DirectX12_pch.h"
+#include "Engine_pch.h"
 
 #include "EditorUI.h"
 #include "GraphicsCore.h"
@@ -18,18 +18,21 @@ void EditorUI::Initialize(HWND hwnd) {
 
     bool is = false;
     bool is32 = false;
+
     // ImGui用のSRVディスクリプタヒープを渡す
+    handle = gfx.GetSrvHeapManager().Allocate();
+
+    ImGui_ImplDX12_InitInfo init_info = {};
+    init_info.Device = gfx.GetDevice();
+    init_info.NumFramesInFlight = 2; // GraphicsCore::frameCount と一致させる
+    init_info.RTVFormat = gfx.GetBackBufferFormat();
+    init_info.CommandQueue = gfx.GetCommandQueue(); // グラフィックスコアのコマンドキューを共有
+    init_info.SrvDescriptorHeap = gfx.GetSrvHeapManager().GetHeap();
+    init_info.LegacySingleSrvCpuDescriptor = handle.CPUHandle; // 古いAPIとの互換性のためにこれらを使用
+    init_info.LegacySingleSrvGpuDescriptor = handle.GPUHandle;
 
     is32 = ImGui_ImplWin32_Init(hwnd);
-
-    is = ImGui_ImplDX12_Init(
-        gfx.GetDevice(),
-        2, // フレームバッファ数
-        gfx.GetBackBufferFormat(),
-        gfx.GetSrvHeap(),
-        gfx.GetSrvHeap()->GetCPUDescriptorHandleForHeapStart(),
-        gfx.GetSrvHeap()->GetGPUDescriptorHandleForHeapStart()
-    );
+    is = ImGui_ImplDX12_Init(&init_info);
 
     ImGui::GetIO().Fonts->Build();
     if (!ImGui_ImplDX12_CreateDeviceObjects()) {
@@ -44,18 +47,25 @@ void EditorUI::Initialize(HWND hwnd) {
 void EditorUI::Shutdown()
 {
     // 終了処理
+    if (handle.IsValid())
+        GraphicsCore::Get().GetSrvHeapManager().Free(handle);
     ImGui_ImplDX12_Shutdown();
     ImGui_ImplWin32_Shutdown();
     ImGui::DestroyContext();
 }
 
-void EditorUI::RenderUI() 
+void EditorUI::BeginUI()
 {
     ImGui_ImplDX12_NewFrame();
     ImGui_ImplWin32_NewFrame();
     ImGui::NewFrame();
     // 全体をドッキングスペースにする
-    ImGui::DockSpaceOverViewport();
+    //ImGui::DockSpaceOverViewport();
+    ImGui::DockSpaceOverViewport(0,nullptr, ImGuiDockNodeFlags_PassthruCentralNode);
+}
+
+void EditorUI::RenderUI()
+{
 
     DrawHierarchyWindow();
     DrawInspectorWindow();
@@ -64,9 +74,11 @@ void EditorUI::RenderUI()
     ImGui::Render();
 
     auto* commandList = GraphicsCore::Get().GetCommandList();
+    //auto handle = GraphicsCore::Get().GetRtvHandle();
+    //commandList->OMSetRenderTargets(1, &handle, FALSE, nullptr);
 
     // ImGuiの描画コマンドを積む前に、専用のディスクリプタヒープをセットする
-    ID3D12DescriptorHeap* heaps[] = { GraphicsCore::Get().GetSrvHeap() };
+    ID3D12DescriptorHeap* heaps[] = { GraphicsCore::Get().GetSrvHeapManager().GetHeap()};
     commandList->SetDescriptorHeaps(1, heaps);
     ImGui_ImplDX12_RenderDrawData(ImGui::GetDrawData(), commandList);
 }
