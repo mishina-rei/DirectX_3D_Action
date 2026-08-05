@@ -5,6 +5,7 @@
 #include "Mesh.h"
 #include "ModelLoader.h"
 #include "Texture.h"
+#include "Animator.h"
 
 class Material;
 
@@ -22,6 +23,24 @@ public:
     // 将来的にはここに追加していく
     void Draw(Material& material);
 
+    // アニメーション再生（インデックス指定）
+    void PlayAnimation(int index);
+
+    void Update(float dt);
+
+    void AddAnimationClip(const AnimationClip& clip);
+
+    // index番目のアニメーションへ滑らかに遷移する
+    void CrossFadeAnimation(int index, float transitionDuration = 0.2f);
+
+private:
+
     std::vector<Mesh> meshes;               // FBX内のすべてのメッシュを保持
     std::vector<Texture> diffuseTextures;   // メッシュごとのディフューズテクスチャ
+    std::unordered_map<std::string, BoneInfo> boneInfoMap;
+    NodeData rootNode;
+    std::vector<AnimationClip> animations;
+
+    int currentAnimationIndex = -1;
+    Animator animator;
 };

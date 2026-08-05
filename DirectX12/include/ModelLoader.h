@@ -65,10 +65,6 @@ struct MeshData {
     std::vector<VERTEX> vertices;
     std::vector<uint32_t> indices;
     MaterialData material;
-
-    // ボーン名とボーン情報のマップ
-    std::unordered_map<std::string, BoneInfo> BoneInfoMap;
-    int BoneCounter = 0; // ボーンの総数
 };
 
 // -------------------------------------------------
@@ -109,7 +105,7 @@ struct AnimationClip {
 
     std::vector<BoneAnimationTrack> boneTracks;
 
-    // アニメーション計算時に「ボーン名」から高速にトラックを探せるようにする辞書
+    // アニメーション計算時にボーン名から高速にトラックを探せるようにする辞書
     std::unordered_map<std::string, int> boneNameToTrackIndex;
 };
 
@@ -125,6 +121,7 @@ struct LoadedSceneData {
     std::vector<MeshData> meshes;
     std::vector<AnimationClip> animations;
     NodeData rootNode;
+    std::unordered_map<std::string, BoneInfo> boneInfoMap;
 };
 
 
@@ -138,7 +135,8 @@ public:
     static DirectX::XMMATRIX ConvertMatrixToDirectXFormat(const aiMatrix4x4& from);
 
     // LoadFBX内のメッシュ抽出処理の追加部分
-    static void ExtractBoneWeights(std::vector<VERTEX>& vertices, aiMesh* mesh, MeshData& meshData);
+    static void ExtractBoneWeights(std::vector<VERTEX>& vertices, aiMesh* mesh, std::unordered_map<std::string, BoneInfo>& globalBoneInfoMap,
+        int& globalBoneCounter);
     
     static LoadedSceneData LoadFBX(const std::string& filePath);
 

@@ -44,48 +44,70 @@ void Animator::Initialize(const AnimationClip* clip, const NodeData* rootNode, c
 void Animator::UpdateAnimation(float dt) {
     if (!currentClip || !rootNode) return;
 
-    // 時間を進める (TicksPerSecond を掛けてアニメーションの基準時間に合わせる)
+    // 現在のアニメーションの時間を進める
     currentTime += dt * currentClip->ticksPerSecond;
-
-    // ループ再生させるために剰余をとる
     currentTime = fmod(currentTime, currentClip->duration);
 
-    // ルートノードから階層計算をスタート (初期の親行列は単位行列)
-    CalculateBoneTransform(rootNode, DirectX::XMMatrixIdentity());
+    float blendFactor = 0.0f; // 0.0(現在) ～ 1.0(次)
 
-    //if (!finalBoneMatrices.empty()) {
-    //    static float debugAngle = 0.0f;
-    //    debugAngle += dt * 5.0f;  
-    //    finalBoneMatrices[0] = DirectX::XMMatrixRotationY(debugAngle);
-    //}
+    if (isBlending && nextClip) {
+        // 次のアニメーションの時間も進める
+        nextTime += dt * nextClip->ticksPerSecond;
+        nextTime = fmod(nextTime, nextClip->duration);
 
-    // ▼▼▼ 追加：テスト用強制上書き ▼▼▼
-    //for (int i = 0; i < 100; ++i) {
-    //    // 全ボーンを強制的に単位行列にする（Transposeしても単位行列は同じなのでそのまま）
-    //    finalBoneMatrices[i] = DirectX::XMMatrixIdentity();
-    //}
+        // ブレンドの進行度を更新
+        currentBlendTime += dt;
+        blendFactor = currentBlendTime / blendDuration;
+
+        // ブレンド完了判定
+        if (blendFactor >= 1.0f) {
+            currentClip = nextClip;
+            currentTime = nextTime;
+
+            nextClip = nullptr;
+            isBlending = false;
+            blendFactor = 0.0f;
+        }
+    }
+
+    // 階層を辿って行列を計算する
+    CalculateBoneTransform(rootNode, DirectX::XMMatrixIdentity(), blendFactor);
 }
 
-void Animator::CalculateBoneTransform(const NodeData* node, DirectX::XMMATRIX parentTransform) {
+void Animator::CalculateBoneTransform(const NodeData* node, DirectX::XMMATRIX parentTransform, float blendFactor) {
     std::string nodeName = node->name;
 
     // 基本はノードが元々持っている初期姿勢(ローカル行列)
     DirectX::XMMATRIX nodeTransform = node->transformation;
 
-    // もしこのノード（ボーン）のアニメーションデータが存在すれば、行列を上書きする
-    if (currentClip->boneNameToTrackIndex.find(nodeName) != currentClip->boneNameToTrackIndex.end()) {
-        int trackIndex = currentClip->boneNameToTrackIndex.at(nodeName);
-        const BoneAnimationTrack& track = currentClip->boneTracks[trackIndex];
+    // 現在のアニメーション（currentClip）のローカル姿勢を計算
+    DirectX::XMVECTOR pos1, scale1, rot1;
+    bool hasCurrentAnim = GetLocalTransform(currentClip, nodeName, currentTime, pos1, scale1, rot1);
 
-        // 補間計算
-        DirectX::XMFLOAT3 pos = CalcInterpolatedPosition(currentTime, track);
-        DirectX::XMFLOAT4 rot = CalcInterpolatedRotation(currentTime, track);
-        DirectX::XMFLOAT3 scale = CalcInterpolatedScaling(currentTime, track);
+    if (hasCurrentAnim) {
+        // ブレンド中であれば、次のアニメーションの姿勢も計算してミックスする
+        if (isBlending && nextClip) {
+            DirectX::XMVECTOR pos2, scale2, rot2;
+            bool hasNextAnim = GetLocalTransform(nextClip, nodeName, nextTime, pos2, scale2, rot2);
 
-        // スケール・回転・平行移動の行列を作成し、掛け合わせて新しいローカル行列を作る (S * R * T)
-        DirectX::XMMATRIX matScale = DirectX::XMMatrixScaling(scale.x, scale.y, scale.z);
-        DirectX::XMMATRIX matRot = DirectX::XMMatrixRotationQuaternion(DirectX::XMLoadFloat4(&rot));
-        DirectX::XMMATRIX matTrans = DirectX::XMMatrixTranslation(pos.x, pos.y, pos.z);
+            if (hasNextAnim) {
+                // ▼ ここがブレンドの魔法！ DirectXMathで補間する ▼
+
+                // 位置の線形補間 (Lerp)
+                pos1 = DirectX::XMVectorLerp(pos1, pos2, blendFactor);
+
+                // スケールの線形補間 (Lerp)
+                scale1 = DirectX::XMVectorLerp(scale1, scale2, blendFactor);
+
+                // 回転の球面線形補間 (Slerp)
+                rot1 = DirectX::XMQuaternionSlerp(rot1, rot2, blendFactor);
+            }
+        }
+
+        // 抽出・補間した成分を行列に合成 (Scale * Rotation * Translation)
+        DirectX::XMMATRIX matScale = DirectX::XMMatrixScalingFromVector(scale1);
+        DirectX::XMMATRIX matRot = DirectX::XMMatrixRotationQuaternion(rot1);
+        DirectX::XMMATRIX matTrans = DirectX::XMMatrixTranslationFromVector(pos1);
 
         nodeTransform = matScale * matRot * matTrans;
     }
@@ -104,7 +126,7 @@ void Animator::CalculateBoneTransform(const NodeData* node, DirectX::XMMATRIX pa
 
     // 子ノードすべてに対して、自分のグローバル行列を「親行列」として渡して再帰呼び出し
     for (const NodeData& child : node->children) {
-        CalculateBoneTransform(&child, globalTransformation);
+        CalculateBoneTransform(&child, globalTransformation, blendFactor);
     }
 }
 
@@ -175,4 +197,50 @@ DirectX::XMFLOAT3 Animator::CalcInterpolatedScaling(float animationTime, const B
     DirectX::XMFLOAT3 result;
     DirectX::XMStoreFloat3(&result, interp);
     return result;
+}
+
+void Animator::CrossFade(const AnimationClip* targetClip, float transitionDuration) {
+    // 既に同じアニメーションがセットされている、または目標が空なら何もしない
+    if (!targetClip || currentClip == targetClip) return;
+
+    // もし現在何も再生していなければ、ブレンドせずに即座に切り替え
+    if (!currentClip) {
+        currentClip = targetClip;
+        currentTime = 0.0f;
+        isBlending = false;
+        return;
+    }
+
+    // ブレンドの準備
+    nextClip = targetClip;
+    nextTime = 0.0f; // 次のアニメーションは最初から再生する
+
+    blendDuration = transitionDuration;
+    currentBlendTime = 0.0f;
+    isBlending = true;
+}
+
+bool Animator::GetLocalTransform(const AnimationClip* clip, const std::string& nodeName, float time,
+    DirectX::XMVECTOR& outPos, DirectX::XMVECTOR& outScale, DirectX::XMVECTOR& outRot)
+{
+    // このボーンのアニメーショントラックが存在するか辞書でチェック
+    auto it = clip->boneNameToTrackIndex.find(nodeName);
+    if (it == clip->boneNameToTrackIndex.end()) {
+        return false; // アニメーションが無い（静止しているボーンなど）
+    }
+
+    // トラックを取得
+    const BoneAnimationTrack& track = clip->boneTracks[it->second];
+
+    // 各成分を補間計算して取得
+
+	auto pos = CalcInterpolatedPosition(time, track);
+	auto rot = CalcInterpolatedRotation(time, track);
+	auto scale = CalcInterpolatedScaling(time, track);
+    
+    outPos = DirectX::XMLoadFloat3(&pos);
+    outRot = DirectX::XMLoadFloat4(&rot);
+    outScale = DirectX::XMLoadFloat3(&scale);
+
+    return true;
 }

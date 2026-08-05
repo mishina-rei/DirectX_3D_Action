@@ -5,4 +5,5 @@
   </Configurations>
   <Project Path="3D_Action/3D_Action.vcxproj" Id="93e9b505-823f-4acc-9f7b-3dad8a800c99" />
   <Project Path="DirectX12/DirectX12.vcxproj" Id="8d7a432d-f5cc-45dd-9ecb-8a631c562442" />
+  <Project Path="Engine/Engine.vcxproj" Id="9e6fe9bc-f2ba-41c6-be6a-f2d0ac48f566" />
 </Solution>

@@ -26,38 +26,67 @@ DirectX::XMMATRIX ModelLoader::ConvertMatrixToDirectXFormat(const aiMatrix4x4& f
     return to;
 }
 
-void ModelLoader::ExtractBoneWeights(std::vector<VERTEX>& vertices, aiMesh* mesh, MeshData& meshData) {
+void ModelLoader::ExtractBoneWeights(std::vector<VERTEX>& vertices, aiMesh* mesh, std::unordered_map<std::string, BoneInfo>& globalBoneInfoMap,
+    int& globalBoneCounter) {
+    //for (unsigned int boneIndex = 0; boneIndex < mesh->mNumBones; ++boneIndex) {
+    //    int boneID = -1;
+    //    std::string boneName = mesh->mBones[boneIndex]->mName.C_Str();
+
+    //    // 新しいボーンを発見した場合はMapに追加
+    //    if (meshData.BoneInfoMap.find(boneName) == meshData.BoneInfoMap.end()) {
+    //        BoneInfo newBoneInfo;
+    //        newBoneInfo.id = meshData.BoneCounter;
+    //        newBoneInfo.offsetMatrix = ConvertMatrixToDirectXFormat(mesh->mBones[boneIndex]->mOffsetMatrix);
+
+    //        meshData.BoneInfoMap[boneName] = newBoneInfo;
+    //        boneID = meshData.BoneCounter;
+    //        meshData.BoneCounter++;
+    //    }
+    //    else {
+    //        // 既に登録済みのボーンならIDを取得
+    //        boneID = meshData.BoneInfoMap[boneName].id;
+    //    }
+
+    //    // このボーンが影響を与える頂点とその重み（ウェイト）を取得
+    //    auto weights = mesh->mBones[boneIndex]->mWeights;
+    //    int numWeights = mesh->mBones[boneIndex]->mNumWeights;
+
+    //    for (int weightIndex = 0; weightIndex < numWeights; ++weightIndex) {
+    //        int vertexId = weights[weightIndex].mVertexId;
+    //        float weight = weights[weightIndex].mWeight;
+
+    //        // Assimpは微小なウェイトを持つことがあるため、一定以下は無視する
+    //        if (weight <= 0.0f) continue;
+
+    //        // 該当する頂点にボーンIDとウェイトを設定
+    //        SetVertexBoneData(vertices[vertexId], boneID, weight);
+    //    }
+    //}
+
     for (unsigned int boneIndex = 0; boneIndex < mesh->mNumBones; ++boneIndex) {
         int boneID = -1;
         std::string boneName = mesh->mBones[boneIndex]->mName.C_Str();
 
-        // 新しいボーンを発見した場合はMapに追加
-        if (meshData.BoneInfoMap.find(boneName) == meshData.BoneInfoMap.end()) {
+        // 共通のMapに対して登録チェックを行う
+        if (globalBoneInfoMap.find(boneName) == globalBoneInfoMap.end()) {
             BoneInfo newBoneInfo;
-            newBoneInfo.id = meshData.BoneCounter;
+            newBoneInfo.id = globalBoneCounter; // 共通のカウンターを使う
             newBoneInfo.offsetMatrix = ConvertMatrixToDirectXFormat(mesh->mBones[boneIndex]->mOffsetMatrix);
 
-            meshData.BoneInfoMap[boneName] = newBoneInfo;
-            boneID = meshData.BoneCounter;
-            meshData.BoneCounter++;
+            globalBoneInfoMap[boneName] = newBoneInfo;
+            boneID = globalBoneCounter;
+            globalBoneCounter++;
         }
         else {
-            // 既に登録済みのボーンならIDを取得
-            boneID = meshData.BoneInfoMap[boneName].id;
+            boneID = globalBoneInfoMap[boneName].id;
         }
 
-        // このボーンが影響を与える頂点とその重み（ウェイト）を取得
         auto weights = mesh->mBones[boneIndex]->mWeights;
         int numWeights = mesh->mBones[boneIndex]->mNumWeights;
-
         for (int weightIndex = 0; weightIndex < numWeights; ++weightIndex) {
             int vertexId = weights[weightIndex].mVertexId;
             float weight = weights[weightIndex].mWeight;
-
-            // Assimpは微小なウェイトを持つことがあるため、一定以下は無視する
             if (weight <= 0.0f) continue;
-
-            // 該当する頂点にボーンIDとウェイトを設定
             SetVertexBoneData(vertices[vertexId], boneID, weight);
         }
     }
@@ -91,6 +120,10 @@ LoadedSceneData ModelLoader::LoadFBX(const std::string& filePath) {
     }
 
     std::vector<MeshData> loadedMeshes;
+
+    //このモデル全体で共有するボーン辞書とカウンター
+    std::unordered_map<std::string, BoneInfo> globalBoneInfoMap;
+    int globalBoneCounter = 0;
 
     // シーン内のすべてのメッシュをループ
     for (unsigned int i = 0; i < scene->mNumMeshes; ++i) {
@@ -141,7 +174,7 @@ LoadedSceneData ModelLoader::LoadFBX(const std::string& filePath) {
             }
         }
 
-        ExtractBoneWeights(meshData.vertices, ai_mesh, meshData);
+        ExtractBoneWeights(meshData.vertices, ai_mesh, globalBoneInfoMap, globalBoneCounter);
 
         loadedMeshes.push_back(meshData);
     }
@@ -149,6 +182,7 @@ LoadedSceneData ModelLoader::LoadFBX(const std::string& filePath) {
     LoadedSceneData finalData;
     finalData.meshes = loadedMeshes; // これまで抽出したメッシュデータの配列
     finalData.animations = ExtractAnimations(scene); // ここでアニメーションを一気に抽出
+	finalData.boneInfoMap = globalBoneInfoMap; // 共通のボーン辞書を格納
 
     // RootNodeから階層構造を抜き出す
     if (scene->mRootNode) {

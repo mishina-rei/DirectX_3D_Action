@@ -10,18 +10,18 @@ void Model::CreateFromFile(const std::string& filePath) {
         
     ID3D12GraphicsCommandList* cmdList = GraphicsCore::Get().GetCommandList();
 
-    // CPU側でFBXを解析してデータを抽出 (さっき作ったローダーを使用)
-    std::vector<MeshData> loadedData = ModelLoader::LoadFBX(filePath).meshes;
+    // CPU側でFBXを解析してデータを抽出
+    auto loadedData = ModelLoader::LoadFBX(filePath);
 
     // 抽出されたメッシュの数だけGPUバッファ(Meshクラス)を生成
-    meshes.resize(loadedData.size());
-    diffuseTextures.resize(loadedData.size());
+    meshes.resize(loadedData.meshes.size());
+    diffuseTextures.resize(loadedData.meshes.size());
 
     // FBXファイルがあるディレクトリのパスを抽出 (例: "Assets/Model.fbx" -> "Assets/")
     std::string directory = filePath.substr(0, filePath.find_last_of("/\\") + 1);
 
-    for (size_t i = 0; i < loadedData.size(); ++i) {
-        const auto& data = loadedData[i];
+    for (size_t i = 0; i < loadedData.meshes.size(); ++i) {
+        const auto& data = loadedData.meshes[i];
 
         // 抽出したポインタとサイズを、Mesh::Create にそのまま渡す
         meshes[i].Create(
@@ -53,9 +53,31 @@ void Model::CreateFromFile(const std::string& filePath) {
         }
     }
 
+	// アニメーションとボーン情報を移動
+	animations = std::move(loadedData.animations);
+	boneInfoMap = std::move(loadedData.boneInfoMap);
+	rootNode = std::move(loadedData.rootNode);
 }
 void Model::Draw(Material& material) {
 	CommandContext& context = GraphicsCore::Get().GetCommandContext();
+
+    if (currentAnimationIndex >= 0) {
+        const auto& boneMatrices = animator.GetFinalBoneMatrices();
+        if (!boneMatrices.empty()) {
+            // 送信直前にのみTransposeをかける（暗黙のルールをここに隠蔽）
+            //std::vector<DirectX::XMMATRIX> transposedBones(boneMatrices.size());
+            //for (size_t i = 0; i < boneMatrices.size(); ++i) {
+            //    transposedBones[i] = DirectX::XMMatrixTranspose(boneMatrices[i]);
+            //}
+            material.SetData("boneTransforms", boneMatrices.data(), sizeof(DirectX::XMMATRIX) * boneMatrices.size());
+        }
+    }
+    else {
+        // アニメーションがない、または再生されていない時のフェイルセーフ
+        std::vector<DirectX::XMMATRIX> identityBones(256, DirectX::XMMatrixIdentity());
+        material.SetData("boneTransforms", identityBones.data(), sizeof(DirectX::XMMATRIX) * 256);
+    }
+
     // メッシュごとにテクスチャを切り替えて描画
     for (size_t i = 0; i < meshes.size(); ++i) {
 
@@ -81,5 +103,35 @@ void Model::FreeUploadBuffers() {
 
     for (auto& tex : diffuseTextures) {
         tex.FreeUploadBuffer(); // テクスチャの中間バッファも解放
+    }
+}
+
+void Model::PlayAnimation(int index) {
+    if (index >= 0 && index < animations.size()) {
+        if (currentAnimationIndex != index) {
+            currentAnimationIndex = index;
+            // アニメーターの初期化
+            animator.Initialize(&animations[index], &rootNode, &boneInfoMap);
+        }
+    }
+}
+
+void Model::Update(float dt) {
+    if (currentAnimationIndex >= 0) {
+        animator.UpdateAnimation(dt);
+    }
+}
+
+void Model::AddAnimationClip(const AnimationClip& clip) {
+    animations.push_back(clip);
+}
+
+void Model::CrossFadeAnimation(int index, float transitionDuration) {
+    if (index >= 0 && index < animations.size()) {
+        if (currentAnimationIndex != index) {
+            currentAnimationIndex = index;
+            // AnimatorのCrossFadeを呼ぶ
+            animator.CrossFade(&animations[index], transitionDuration);
+        }
     }
 }

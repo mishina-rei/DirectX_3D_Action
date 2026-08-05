@@ -117,8 +117,6 @@ int WINAPI WinMain(HINSTANCE hInstance, HINSTANCE, LPSTR, int nCmdShow) {
     
     ShaderManager::Get().LoadShader("VS_Standard", L"C:\\Develop\\3D_Action\\DirectX_3D_Action\\3D_Action\\src\\Shader\\StandardVS.hlsl", L"main", L"vs_6_0");
     ShaderManager::Get().LoadShader("PS_Standard", L"C:\\Develop\\3D_Action\\DirectX_3D_Action\\3D_Action\\src\\Shader\\StandardPS.hlsl", L"main", L"ps_6_0");
-    //ShaderManager::Get().LoadShader("Standard", L"Shader/StandardVS.hlsl", L"Shader/StandardPS.hlsl");
-    //ShaderManager::Get().CreateStandardPSO("Standard", GraphicsCore::Get().GetBackBufferFormat(), GraphicsCore::Get().GetDepthBufferFormat());
 
     // マテリアル
     auto cubeMaterial = std::make_shared<Material>("VS_Standard", "PS_Standard");
@@ -126,12 +124,6 @@ int WINAPI WinMain(HINSTANCE hInstance, HINSTANCE, LPSTR, int nCmdShow) {
     //std::vector<MeshData> meshes = ModelLoader::LoadFBX("..\\DirectX12\\Assets\\gun\\sniper_0.fbx");    
     auto datas = ModelLoader::LoadFBX("..\\DirectX12\\Assets\\Anim_Voletir_06_OpenVault_Idle.fbx");
     auto meshDatas = ModelLoader::LoadFBX("..\\DirectX12\\Assets\\voletir.fbx");
-
-    //if (!meshDatas.meshes.empty() && !meshDatas.meshes[0].vertices.empty()) {
-    //    float checkWeight = meshDatas.meshes[0].vertices[0].BoneWeights[0];
-    //    int checkID = meshDatas.meshes[0].vertices[0].BoneIDs[0];
-    //    OutputDebugStringA(("Vertex[0] ID: " + std::to_string(checkID) + " Weight: " + std::to_string(checkWeight) + "\n").c_str());
-    //}
 
     Model playerModel;
 
@@ -142,7 +134,7 @@ int WINAPI WinMain(HINSTANCE hInstance, HINSTANCE, LPSTR, int nCmdShow) {
         playerAnimator.Initialize(
             &datas.animations[0],
             &meshDatas.rootNode,
-            &meshDatas.meshes[0].BoneInfoMap // 最初のメッシュのボーンMapを使用
+            &meshDatas.boneInfoMap // 最初のメッシュのボーンMapを使用
         );
     }
 
@@ -164,6 +156,17 @@ int WINAPI WinMain(HINSTANCE hInstance, HINSTANCE, LPSTR, int nCmdShow) {
 
     playerModel.FreeUploadBuffers();
     //mesh.FreeUploadBuffers();
+
+	playerModel.AddAnimationClip(datas.animations[0]); // アニメーションクリップを追加    
+
+    datas = ModelLoader::LoadFBX("..\\DirectX12\\Assets\\Anim_Voletir_08_OpenVault_Hit.fbx");
+
+    
+    playerModel.AddAnimationClip(datas.animations[0]); // アニメーションクリップを追加    
+
+	playerModel.PlayAnimation(0); // 最初のアニメーションを再生
+
+	playerModel.CrossFadeAnimation(1, 1.0f); // 初期状態の更新
 
     // ImGui用の一時変数
     DirectX::XMFLOAT4 cubeColor = { 0.2f, 0.6f, 0.9f, 1.0f };
@@ -192,14 +195,9 @@ int WINAPI WinMain(HINSTANCE hInstance, HINSTANCE, LPSTR, int nCmdShow) {
             // --- 描画ループ内 ---
 			auto& gfx = GraphicsCore::Get();
             auto* ctx = &gfx.GetCommandContext();
-            //auto* psoState = ShaderManager::Get().GetPipelineState("Standard");
-
-            //// 1. PSOとルートシグネチャをセット
-            //ctx->SetPipelineState(psoState->PSO.Get());
-            //ctx->SetRootSignature(psoState->RootSignature.Get());
 
             // 1. アニメーションの計算 (dtは前フレームからの経過時間。例: 0.016f)
-            playerAnimator.UpdateAnimation(0.016f);
+            //playerAnimator.UpdateAnimation(0.016f);
 
             // 2. 計算結果のボーン行列配列を取得
             const auto& boneMatrices = playerAnimator.GetFinalBoneMatrices();
@@ -224,6 +222,8 @@ int WINAPI WinMain(HINSTANCE hInstance, HINSTANCE, LPSTR, int nCmdShow) {
             auto viewProjTransposed = DirectX::XMMatrixTranspose(viewProj);
             auto worldTransposed = DirectX::XMMatrixTranspose(world);
 
+			playerModel.Update(0.016f); // 例として16ms経過したと仮定
+
             // 3. マテリアルへのデータセット（名前ベース！）
             cubeMaterial->SetMatrix("viewProjection", viewProj);
             cubeMaterial->SetMatrix("world", world);
@@ -231,7 +231,7 @@ int WINAPI WinMain(HINSTANCE hInstance, HINSTANCE, LPSTR, int nCmdShow) {
             if (!boneMatrices.empty()) {
 
                 // データサイズ = 行列のサイズ(64バイト) × ボーンの数
-                cubeMaterial->SetData("boneTransforms", boneMatrices.data(), sizeof(DirectX::XMMATRIX) * boneMatrices.size());
+                //cubeMaterial->SetData("boneTransforms", boneMatrices.data(), sizeof(DirectX::XMMATRIX) * boneMatrices.size());
             }
 
             // ディスクリプタヒープをセット
