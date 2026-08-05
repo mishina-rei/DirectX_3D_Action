@@ -1,7 +1,5 @@
-#include "DirectX12_pch.h"
+#include "Engine_pch.h"
 #include "Model.h"
-#include "GraphicsCore.h"
-#include "Material.h"
 #include <filesystem> 
 
 void Model::CreateFromFile(const std::string& filePath) {

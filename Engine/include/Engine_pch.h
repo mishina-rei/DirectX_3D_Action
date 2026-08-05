@@ -4,10 +4,15 @@
 // ただし、ここに一覧表示されているファイルは、ビルド間でいずれかが更新されると、すべてが再コンパイルされます。
 // 頻繁に更新するファイルをここに追加しないでください。追加すると、パフォーマンス上の利点がなくなります。
 
-#ifndef PCH_H
-#define PCH_H
+#ifndef ENGINE_PCH_H
+#define ENGINE_PCH_H
 
 // プリコンパイルするヘッダーをここに追加します
-#include "framework.h"
+#include "DirectX12.h"
 
-#endif //PCH_H
+
+#include <DirectXMath.h>
+#include <vector>
+#include <unordered_map>
+
+#endif //ENGINE_PCH_H
