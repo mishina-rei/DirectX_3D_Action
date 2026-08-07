@@ -10,9 +10,9 @@
 // プリコンパイルするヘッダーをここに追加します
 #include "DirectX12.h"
 
-
 #include <DirectXMath.h>
 #include <vector>
 #include <unordered_map>
+#include <memory>
 
 #endif //ENGINE_PCH_H

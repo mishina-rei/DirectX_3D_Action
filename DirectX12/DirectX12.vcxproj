@@ -61,6 +61,7 @@
     <ClInclude Include="include\PSOCache.h" />
     <ClInclude Include="include\ShaderManager.h" />
     <ClInclude Include="include\ShaderReflection.h" />
+    <ClInclude Include="include\Sprite.h" />
     <ClInclude Include="include\Texture.h" />
     <ClInclude Include="include\UploadRingBuffer.h" />
   </ItemGroup>
