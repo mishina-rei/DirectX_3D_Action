@@ -166,6 +166,7 @@
     <ClCompile Include="src\ColliderSystem.cpp" />
     <ClCompile Include="src\CommandBuffer.cpp" />
     <ClCompile Include="src\EditorUI.cpp" />
+    <ClCompile Include="src\EffekseerManager.cpp" />
     <ClCompile Include="src\Engine_pch.cpp">
       <PrecompiledHeader Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">Create</PrecompiledHeader>
       <PrecompiledHeader Condition="'$(Configuration)|$(Platform)'=='Release|x64'">Create</PrecompiledHeader>
@@ -194,6 +195,7 @@
     <ClInclude Include="include\ComponentTypeID.h" />
     <ClInclude Include="include\Defines.h" />
     <ClInclude Include="include\EditorUI.h" />
+    <ClInclude Include="include\EffekseerManager.h" />
     <ClInclude Include="include\Engine.h" />
     <ClInclude Include="include\Engine_pch.h" />
     <ClInclude Include="include\EntityID.h" />
