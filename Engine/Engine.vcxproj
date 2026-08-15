@@ -120,6 +120,7 @@
       <PrecompiledHeader>Use</PrecompiledHeader>
       <PrecompiledHeaderFile>Engine_pch.h</PrecompiledHeaderFile>
       <AdditionalIncludeDirectories>$(ProjectDir)include\;$(SolutionDir)DirectX12\include\;$(SolutionDir)library\;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
+      <RuntimeLibrary>MultiThreadedDebugDLL</RuntimeLibrary>
     </ClCompile>
     <Link>
       <SubSystem>
@@ -142,6 +143,7 @@
       <PrecompiledHeader>Use</PrecompiledHeader>
       <PrecompiledHeaderFile>Engine_pch.h</PrecompiledHeaderFile>
       <AdditionalIncludeDirectories>$(ProjectDir)include\;$(SolutionDir)DirectX12\include\;$(SolutionDir)library\;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
+      <RuntimeLibrary>MultiThreadedDLL</RuntimeLibrary>
     </ClCompile>
     <Link>
       <SubSystem>
@@ -158,22 +160,108 @@
     </ProjectReference>
   </ItemGroup>
   <ItemGroup>
+    <ClCompile Include="..\..\..\ENDLESSSHOOT\ENDLESS-SHOOT\ENDLESS_SHOOT\src\Archetype.cpp" />
+    <ClCompile Include="..\..\..\ENDLESSSHOOT\ENDLESS-SHOOT\ENDLESS_SHOOT\src\Audio.cpp" />
+    <ClCompile Include="..\..\..\ENDLESSSHOOT\ENDLESS-SHOOT\ENDLESS_SHOOT\src\Input.cpp" />
     <ClCompile Include="src\Animator.cpp" />
+    <ClCompile Include="src\CameraSystem.cpp" />
+    <ClCompile Include="src\ColliderSystem.cpp" />
+    <ClCompile Include="src\CommandBuffer.cpp" />
     <ClCompile Include="src\EditorUI.cpp" />
+    <ClCompile Include="src\EffekseerManager.cpp" />
+    <ClCompile Include="src\EngineCore.cpp" />
     <ClCompile Include="src\Engine_pch.cpp">
       <PrecompiledHeader Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">Create</PrecompiledHeader>
       <PrecompiledHeader Condition="'$(Configuration)|$(Platform)'=='Release|x64'">Create</PrecompiledHeader>
     </ClCompile>
+    <ClCompile Include="src\imgui.cpp">
+      <PrecompiledHeader Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">NotUsing</PrecompiledHeader>
+      <PrecompiledHeader Condition="'$(Configuration)|$(Platform)'=='Release|x64'">NotUsing</PrecompiledHeader>
+    </ClCompile>
+    <ClCompile Include="src\imgui_demo.cpp">
+      <PrecompiledHeader Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">NotUsing</PrecompiledHeader>
+      <PrecompiledHeader Condition="'$(Configuration)|$(Platform)'=='Release|x64'">NotUsing</PrecompiledHeader>
+    </ClCompile>
+    <ClCompile Include="src\imgui_draw.cpp">
+      <PrecompiledHeader Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">NotUsing</PrecompiledHeader>
+      <PrecompiledHeader Condition="'$(Configuration)|$(Platform)'=='Release|x64'">NotUsing</PrecompiledHeader>
+    </ClCompile>
+    <ClCompile Include="src\imgui_impl_dx12.cpp">
+      <PrecompiledHeader Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">NotUsing</PrecompiledHeader>
+      <PrecompiledHeader Condition="'$(Configuration)|$(Platform)'=='Release|x64'">NotUsing</PrecompiledHeader>
+    </ClCompile>
+    <ClCompile Include="src\imgui_impl_win32.cpp">
+      <PrecompiledHeader Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">NotUsing</PrecompiledHeader>
+      <PrecompiledHeader Condition="'$(Configuration)|$(Platform)'=='Release|x64'">NotUsing</PrecompiledHeader>
+    </ClCompile>
+    <ClCompile Include="src\imgui_tables.cpp">
+      <PrecompiledHeader Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">NotUsing</PrecompiledHeader>
+      <PrecompiledHeader Condition="'$(Configuration)|$(Platform)'=='Release|x64'">NotUsing</PrecompiledHeader>
+    </ClCompile>
+    <ClCompile Include="src\imgui_widgets.cpp">
+      <PrecompiledHeader Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">NotUsing</PrecompiledHeader>
+      <PrecompiledHeader Condition="'$(Configuration)|$(Platform)'=='Release|x64'">NotUsing</PrecompiledHeader>
+    </ClCompile>
     <ClCompile Include="src\Model.cpp" />
     <ClCompile Include="src\ModelLoader.cpp" />
+    <ClCompile Include="src\PhysicsSystem.cpp" />
+    <ClCompile Include="src\Random.cpp" />
+    <ClCompile Include="src\RenderSystem.cpp" />
+    <ClCompile Include="src\Scene.cpp" />
+    <ClCompile Include="src\SceneManager.cpp" />
+    <ClCompile Include="src\ScriptSystem.cpp" />
+    <ClCompile Include="src\Sprite.cpp" />
+    <ClCompile Include="src\world.cpp" />
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="include\Animator.h" />
+    <ClInclude Include="include\Archetype.h" />
+    <ClInclude Include="include\Audio.h" />
+    <ClInclude Include="include\Camera.h" />
+    <ClInclude Include="include\CameraSystem.h" />
+    <ClInclude Include="include\Collider.h" />
+    <ClInclude Include="include\ColliderSystem.h" />
+    <ClInclude Include="include\CommandBuffer.h" />
+    <ClInclude Include="include\ComponentArray.h" />
+    <ClInclude Include="include\ComponentTypeID.h" />
+    <ClInclude Include="include\Defines.h" />
     <ClInclude Include="include\EditorUI.h" />
+    <ClInclude Include="include\EffekseerManager.h" />
     <ClInclude Include="include\Engine.h" />
+    <ClInclude Include="include\EngineCore.h" />
     <ClInclude Include="include\Engine_pch.h" />
+    <ClInclude Include="include\EntityID.h" />
+    <ClInclude Include="include\IDGenerator.h" />
+    <ClInclude Include="include\imconfig.h" />
+    <ClInclude Include="include\imgui.h" />
+    <ClInclude Include="include\imgui_impl_dx12.h" />
+    <ClInclude Include="include\imgui_impl_win32.h" />
+    <ClInclude Include="include\imgui_internal.h" />
+    <ClInclude Include="include\imstb_rectpack.h" />
+    <ClInclude Include="include\imstb_textedit.h" />
+    <ClInclude Include="include\imstb_truetype.h" />
+    <ClInclude Include="include\Input.h" />
+    <ClInclude Include="include\json.hpp" />
+    <ClInclude Include="include\MeshRenderer.h" />
     <ClInclude Include="include\Model.h" />
     <ClInclude Include="include\ModelLoader.h" />
+    <ClInclude Include="include\NativeScript.h" />
+    <ClInclude Include="include\PhysicsSystem.h" />
+    <ClInclude Include="include\Quaternion.h" />
+    <ClInclude Include="include\Random.h" />
+    <ClInclude Include="include\RenderSystem.h" />
+    <ClInclude Include="include\Rigidbody.h" />
+    <ClInclude Include="include\Scene.h" />
+    <ClInclude Include="include\SceneManager.h" />
+    <ClInclude Include="include\Script.h" />
+    <ClInclude Include="include\ScriptSystem.h" />
+    <ClInclude Include="include\Signature.h" />
+    <ClInclude Include="include\SparsePool.h" />
+    <ClInclude Include="include\Sprite.h" />
+    <ClInclude Include="include\SpriteRenderer.h" />
+    <ClInclude Include="include\Transform.h" />
+    <ClInclude Include="include\Vector.h" />
+    <ClInclude Include="include\world.h" />
   </ItemGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />
   <ImportGroup Label="ExtensionTargets">
