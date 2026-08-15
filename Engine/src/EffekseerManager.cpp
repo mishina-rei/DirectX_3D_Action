@@ -4,17 +4,23 @@
 #include "CameraSystem.h"
 #include <cstdlib>
 
+// EffekseerManager.cpp の上部
+
 #if _DEBUG
 #pragma comment(lib, "Effekseer/Debug/Effekseer.lib")
 #pragma comment(lib, "Effekseer/Debug/EffekseerRendererDX12.lib")
+#pragma comment(lib, "Effekseer/Debug/LLGI.lib") 
 #else
 #pragma comment(lib, "Effekseer/Release/Effekseer.lib")
 #pragma comment(lib, "Effekseer/Release/EffekseerRendererDX12.lib")
+#pragma comment(lib, "Effekseer/Release/LLGI.lib") 
 #endif
 
 ::Effekseer::ManagerRef EffekseerManager::manager = nullptr;
 ::Effekseer::RefPtr<EffekseerRenderer::Renderer> EffekseerManager::renderer = nullptr;
 std::map<std::string, ::Effekseer::EffectRef> EffekseerManager::effects;
+::Effekseer::RefPtr<EffekseerRenderer::SingleFrameMemoryPool> EffekseerManager::memoryPool = nullptr;
+::Effekseer::RefPtr<EffekseerRenderer::CommandList> EffekseerManager::efkCmdList = nullptr;
 
 void EffekseerManager::Init()
 {

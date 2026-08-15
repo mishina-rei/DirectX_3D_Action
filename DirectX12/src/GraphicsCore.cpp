@@ -3,6 +3,8 @@
 #include "GraphicsCore.h"
 #include <stdexcept>
 
+#include "ShaderManager.h"
+
 constexpr int MAX_DESCRIPTOR = 1024;
 
 // エラーチェック用マクロ（実際はエラーログ出力などに置き換えてください）
@@ -150,6 +152,9 @@ void GraphicsCore::Initialize(HWND hwnd, uint32_t width, uint32_t height) {
     );
 
     constantBufferPool.Initialize(device.Get(), 4 * 1024 * 1024);
+
+	// ShaderManagerの初期化
+    ShaderManager::Get().Initialize(GraphicsCore::Get().GetDevice());
 }
 
 void GraphicsCore::BeginFrame() {
@@ -188,6 +193,13 @@ void GraphicsCore::BeginFrame() {
         0,
         nullptr
     );
+
+	// ビューポートとシザー矩形の設定
+    D3D12_VIEWPORT viewport = { 0.0f, 0.0f, 1920.0f, 1080.0f, 0.0f, 1.0f };
+    D3D12_RECT scissorRect = { 0, 0, 1920, 1080 };
+
+    commandContext.GetCommandList()->RSSetViewports(1, &viewport);
+    commandContext.GetCommandList()->RSSetScissorRects(1, &scissorRect);
 }
 
 void GraphicsCore::EndFrame() {

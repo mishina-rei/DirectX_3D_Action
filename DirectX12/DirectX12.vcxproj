@@ -19,13 +19,6 @@
     </ProjectConfiguration>
   </ItemGroup>
   <ItemGroup>
-    <ClCompile Include="..\library\imgui\imgui.cpp" />
-    <ClCompile Include="..\library\imgui\imgui_demo.cpp" />
-    <ClCompile Include="..\library\imgui\imgui_draw.cpp" />
-    <ClCompile Include="..\library\imgui\imgui_impl_dx12.cpp" />
-    <ClCompile Include="..\library\imgui\imgui_impl_win32.cpp" />
-    <ClCompile Include="..\library\imgui\imgui_tables.cpp" />
-    <ClCompile Include="..\library\imgui\imgui_widgets.cpp" />
     <ClCompile Include="src\CommandContext.cpp" />
     <ClCompile Include="src\DescriptorHeapManager.cpp" />
     <ClCompile Include="src\DirectX12.cpp" />
@@ -48,20 +41,11 @@
     <ClInclude Include="include\DirectX12.h" />
     <ClInclude Include="include\GraphicsCore.h" />
     <ClInclude Include="include\DirectX12_pch.h" />
-    <ClInclude Include="include\imconfig.h" />
-    <ClInclude Include="include\imgui.h" />
-    <ClInclude Include="include\imgui_impl_dx12.h" />
-    <ClInclude Include="include\imgui_impl_win32.h" />
-    <ClInclude Include="include\imgui_internal.h" />
-    <ClInclude Include="include\imstb_rectpack.h" />
-    <ClInclude Include="include\imstb_textedit.h" />
-    <ClInclude Include="include\imstb_truetype.h" />
     <ClInclude Include="include\Material.h" />
     <ClInclude Include="include\Mesh.h" />
     <ClInclude Include="include\PSOCache.h" />
     <ClInclude Include="include\ShaderManager.h" />
     <ClInclude Include="include\ShaderReflection.h" />
-    <ClInclude Include="include\Sprite.h" />
     <ClInclude Include="include\Texture.h" />
     <ClInclude Include="include\UploadRingBuffer.h" />
   </ItemGroup>
@@ -167,6 +151,7 @@
       <PrecompiledHeader>Use</PrecompiledHeader>
       <PrecompiledHeaderFile>DirectX12_pch.h</PrecompiledHeaderFile>
       <AdditionalIncludeDirectories>$(ProjectDir)include\;$(SolutionDir)library\;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
+      <RuntimeLibrary>MultiThreadedDebugDLL</RuntimeLibrary>
     </ClCompile>
     <Link>
       <SubSystem>
@@ -193,6 +178,7 @@
       <PrecompiledHeader>Use</PrecompiledHeader>
       <PrecompiledHeaderFile>DirectX12_pch.h</PrecompiledHeaderFile>
       <AdditionalIncludeDirectories>$(ProjectDir)include\;$(SolutionDir)library\;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
+      <RuntimeLibrary>MultiThreadedDLL</RuntimeLibrary>
     </ClCompile>
     <Link>
       <SubSystem>

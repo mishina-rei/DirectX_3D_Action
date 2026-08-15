@@ -23,6 +23,13 @@ struct Camera
 			nearClip,
 			farClip
 		)));
+		DirectX::XMStoreFloat4x4(&mat,
+			DirectX::XMMatrixPerspectiveFovLH(
+				DirectX::XMConvertToRadians(fov),
+				aspect,
+				nearClip,
+				farClip
+			));
 		return mat;
 	}
 
@@ -38,6 +45,7 @@ struct Camera
 
 		DirectX::XMFLOAT4X4 mat;
 		DirectX::XMStoreFloat4x4(&mat, DirectX::XMMatrixTranspose(DirectX::XMMatrixLookToLH(position, forward, up)));
+		DirectX::XMStoreFloat4x4(&mat, DirectX::XMMatrixLookToLH(position, forward, up));
 		return mat;
     }
 
@@ -48,6 +56,9 @@ struct Camera
 		DirectX::XMStoreFloat4x4(&mat, DirectX::XMMatrixTranspose(
 			DirectX::XMMatrixLookAtLH(position, target, up)
 		));
+		DirectX::XMStoreFloat4x4(&mat,
+			DirectX::XMMatrixLookAtLH(position, target, up)
+		);
 		return mat;
 	}
 };

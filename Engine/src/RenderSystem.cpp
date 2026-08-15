@@ -8,15 +8,20 @@
 #include "GraphicsCore.h"
 #include "Sprite.h"
 
+HRESULT RenderSystem::Init()
+{
+    return S_OK;
+}
+
 void RenderSystem::Draw(ECS::World* world)
 {
     auto& gfx = GraphicsCore::Get();
     auto* cmdList = gfx.GetCommandList();
 
     // 描画先のセット (バックバッファと深度バッファ)
-    auto rtvHandle = gfx.GetRtvHandle();
-    auto dsvHandle = gfx.GetDsvHandle();
-    cmdList->OMSetRenderTargets(1, &rtvHandle, FALSE, &dsvHandle);
+    //auto rtvHandle = gfx.GetRtvHandle();
+    //auto dsvHandle = gfx.GetDsvHandle();
+    //cmdList->OMSetRenderTargets(1, &rtvHandle, FALSE, &dsvHandle);
 
     // ディスクリプタヒープのセット (SRV用)
     ID3D12DescriptorHeap* heaps[] = { gfx.GetSrvHeapManager().GetHeap() };
@@ -34,6 +39,9 @@ void RenderSystem::Draw(ECS::World* world)
     world->ForEach<MeshRenderer, Transform>([&](ECS::EntityID id, MeshRenderer& mesh, Transform& transform) {
         if (!mesh.isVisible || !mesh.pModel) return;
 
+		// トポロジーのセット（TriangleList固定）
+        cmdList->IASetPrimitiveTopology(D3D_PRIMITIVE_TOPOLOGY_TRIANGLELIST);
+
         // ワールド行列計算
         DirectX::XMMATRIX T = DirectX::XMMatrixTranslationFromVector(transform.position);
         DirectX::XMMATRIX R = DirectX::XMMatrixRotationQuaternion(transform.rotation);
@@ -41,14 +49,16 @@ void RenderSystem::Draw(ECS::World* world)
         DirectX::XMMATRIX matWorld = S * R * T;
 
         // マテリアルへ定数バッファのデータを転送
-        mesh.material.SetMatrix("world", matWorld);
+        mesh.material->SetMatrix("world", matWorld);
 
-        mesh.material.SetMatrix("viewProjection", matView * matProj);
+        mesh.material->SetMatrix("viewProjection", matView * matProj);
 
-        // mesh.material.SetVector("baseColor", DirectX::XMFLOAT4(mesh.color.x, mesh.color.y, mesh.color.z, mesh.color.w));
+        // mesh.material->SetVector("baseColor", DirectX::XMFLOAT4(mesh.color.x, mesh.color.y, mesh.color.z, mesh.color.w));
+
+        auto material = mesh.material.get();
 
         // モデル描画
-        mesh.pModel->Draw(mesh.material);
+        mesh.pModel->Draw(*material);
         });
 
     // ==================================================
@@ -67,7 +77,7 @@ void RenderSystem::Draw(ECS::World* world)
         DirectX::XMMATRIX matWorld = S * R * T;
 
         DirectX::XMFLOAT4X4 worldOut;
-        DirectX::XMStoreFloat4x4(&worldOut, DirectX::XMMatrixTranspose(matWorld));
+        DirectX::XMStoreFloat4x4(&worldOut, matWorld);
 
         Sprite::SetWorld(worldOut);
         Sprite::SetTexture(sprite.pTexture.get());
@@ -85,10 +95,10 @@ void RenderSystem::Draw(ECS::World* world)
     // ==================================================
     // UI用の正射影行列
     DirectX::XMFLOAT4X4 uiView;
-    DirectX::XMStoreFloat4x4(&uiView, DirectX::XMMatrixTranspose(DirectX::XMMatrixIdentity()));
+    DirectX::XMStoreFloat4x4(&uiView,DirectX::XMMatrixIdentity());
     DirectX::XMFLOAT4X4 uiProj;
-    DirectX::XMStoreFloat4x4(&uiProj, DirectX::XMMatrixTranspose(DirectX::XMMatrixOrthographicOffCenterLH(
-        0.0f, (float)SCREEN_WIDTH, (float)SCREEN_HEIGHT, 0.0f, 0.0f, 1.0f)));
+    DirectX::XMStoreFloat4x4(&uiProj, DirectX::XMMatrixOrthographicOffCenterLH(
+        0.0f, (float)SCREEN_WIDTH, (float)SCREEN_HEIGHT, 0.0f, 0.0f, 1.0f));
 
     Sprite::SetView(uiView);
     Sprite::SetProjection(uiProj);
@@ -126,7 +136,7 @@ void RenderSystem::Draw(ECS::World* world)
         DirectX::XMMATRIX matWorld = S * R * T;
 
         DirectX::XMFLOAT4X4 worldOut;
-        DirectX::XMStoreFloat4x4(&worldOut, DirectX::XMMatrixTranspose(matWorld));
+        DirectX::XMStoreFloat4x4(&worldOut, matWorld);
 
         Sprite::SetWorld(worldOut);
         Sprite::SetTexture(sprite.pTexture.get());

@@ -4,6 +4,8 @@
 #include "Engine.h"
 #include "Animator.h"
 
+#include "SceneTest.h"
+
 // ImGuiのWin32メッセージハンドラを宣言
 extern IMGUI_IMPL_API LRESULT ImGui_ImplWin32_WndProcHandler(HWND hWnd, UINT msg, WPARAM wParam, LPARAM lParam);
 
@@ -58,229 +60,231 @@ std::vector<uint16_t> indices = {
 };
 
 int WINAPI WinMain(HINSTANCE hInstance, HINSTANCE, LPSTR, int nCmdShow) {
-    // ウィンドウサイズ固定する
-    SetThreadDpiAwarenessContext(DPI_AWARENESS_CONTEXT_PER_MONITOR_AWARE_V2);
-    // ウィンドウ作成
-    const wchar_t* className = L"DX12GameEngineClass";
-    const wchar_t* windowName = L"My Custom DX12 Engine";
-    const uint32_t width = 1920;
-    const uint32_t height = 1080;
 
-    // ウィンドウクラスの設定
-    WNDCLASSEXW wc = {};
-    wc.cbSize = sizeof(WNDCLASSEXW);
-    wc.style = CS_HREDRAW | CS_VREDRAW;
-    wc.lpfnWndProc = WndProc;       // ウィンドウプロシージャを登録
-    wc.hInstance = hInstance;
-    wc.hCursor = LoadCursor(nullptr, IDC_ARROW);
-    wc.hbrBackground = (HBRUSH)(COLOR_WINDOW + 1);
-    wc.lpszClassName = className;
+	EngineCore::Get().Run<SceneTest>(L"My Custom DX12 Engine", 1920, 1080);
+ //   // ウィンドウサイズ固定する
+ //   SetThreadDpiAwarenessContext(DPI_AWARENESS_CONTEXT_PER_MONITOR_AWARE_V2);
+ //   // ウィンドウ作成
+ //   const wchar_t* className = L"DX12GameEngineClass";
+ //   const wchar_t* windowName = L"My Custom DX12 Engine";
+ //   const uint32_t width = 1920;
+ //   const uint32_t height = 1080;
 
-    RegisterClassExW(&wc);
+ //   // ウィンドウクラスの設定
+ //   WNDCLASSEXW wc = {};
+ //   wc.cbSize = sizeof(WNDCLASSEXW);
+ //   wc.style = CS_HREDRAW | CS_VREDRAW;
+ //   wc.lpfnWndProc = WndProc;       // ウィンドウプロシージャを登録
+ //   wc.hInstance = hInstance;
+ //   wc.hCursor = LoadCursor(nullptr, IDC_ARROW);
+ //   wc.hbrBackground = (HBRUSH)(COLOR_WINDOW + 1);
+ //   wc.lpszClassName = className;
 
-    // ウィンドウサイズの補正（タイトルバーや枠の分を計算して、描画領域をぴったり1280x720にする）
-    RECT rc = { 0, 0, static_cast<LONG>(width), static_cast<LONG>(height) };
-    AdjustWindowRect(&rc, WS_OVERLAPPEDWINDOW, FALSE);
+ //   RegisterClassExW(&wc);
 
-    // ウィンドウの生成
-    HWND hwnd = CreateWindowExW(
-        0,
-        className,
-        windowName,
-        WS_OVERLAPPEDWINDOW, // 通常のウィンドウ（リサイズ可能）
-        CW_USEDEFAULT, CW_USEDEFAULT,
-        rc.right - rc.left,  // 補正後の幅
-        rc.bottom - rc.top,  // 補正後の高さ
-        nullptr,
-        nullptr,
-        hInstance,
-        nullptr
-    );
+ //   // ウィンドウサイズの補正（タイトルバーや枠の分を計算して、描画領域をぴったり1280x720にする）
+ //   RECT rc = { 0, 0, static_cast<LONG>(width), static_cast<LONG>(height) };
+ //   AdjustWindowRect(&rc, WS_OVERLAPPEDWINDOW, FALSE);
 
-    if (!hwnd) {
-        return -1;
-    }
+ //   // ウィンドウの生成
+ //   HWND hwnd = CreateWindowExW(
+ //       0,
+ //       className,
+ //       windowName,
+ //       WS_OVERLAPPEDWINDOW, // 通常のウィンドウ（リサイズ可能）
+ //       CW_USEDEFAULT, CW_USEDEFAULT,
+ //       rc.right - rc.left,  // 補正後の幅
+ //       rc.bottom - rc.top,  // 補正後の高さ
+ //       nullptr,
+ //       nullptr,
+ //       hInstance,
+ //       nullptr
+ //   );
 
-    // ウィンドウを表示
-    ShowWindow(hwnd, nCmdShow);
-    UpdateWindow(hwnd);
+ //   if (!hwnd) {
+ //       return -1;
+ //   }
 
-    // エンジンの初期化
-    GraphicsCore::Get().Initialize(hwnd, 1920, 1080);
+ //   // ウィンドウを表示
+ //   ShowWindow(hwnd, nCmdShow);
+ //   UpdateWindow(hwnd);
 
-    // エディタ初期化
-    EditorUI editor;
-    editor.Initialize(hwnd);
+ //   // エンジンの初期化
+ //   GraphicsCore::Get().Initialize(hwnd, 1920, 1080);
 
-    ShaderManager::Get().Initialize(GraphicsCore::Get().GetDevice());
-    
-    ShaderManager::Get().LoadShader("VS_Standard", L"C:\\Develop\\3D_Action\\DirectX_3D_Action\\3D_Action\\src\\Shader\\StandardVS.hlsl", L"main", L"vs_6_0");
-    ShaderManager::Get().LoadShader("PS_Standard", L"C:\\Develop\\3D_Action\\DirectX_3D_Action\\3D_Action\\src\\Shader\\StandardPS.hlsl", L"main", L"ps_6_0");
+ //   // エディタ初期化
+ //   EditorUI editor;
+ //   editor.Initialize(hwnd);
 
-    // マテリアル
-    auto cubeMaterial = std::make_shared<Material>("VS_Standard", "PS_Standard");
+ //   ShaderManager::Get().Initialize(GraphicsCore::Get().GetDevice());
+ //   
+ //   ShaderManager::Get().LoadShader("VS_Standard", L"C:\\Develop\\3D_Action\\DirectX_3D_Action\\3D_Action\\src\\Shader\\StandardVS.hlsl", L"main", L"vs_6_0");
+ //   ShaderManager::Get().LoadShader("PS_Standard", L"C:\\Develop\\3D_Action\\DirectX_3D_Action\\3D_Action\\src\\Shader\\StandardPS.hlsl", L"main", L"ps_6_0");
 
-    //std::vector<MeshData> meshes = ModelLoader::LoadFBX("..\\DirectX12\\Assets\\gun\\sniper_0.fbx");    
-    auto datas = ModelLoader::LoadFBX("..\\DirectX12\\Assets\\Anim_Voletir_06_OpenVault_Idle.fbx");
-    auto meshDatas = ModelLoader::LoadFBX("..\\DirectX12\\Assets\\voletir.fbx");
+ //   // マテリアル
+ //   auto cubeMaterial = std::make_shared<Material>("VS_Standard", "PS_Standard");
 
-    Model playerModel;
+ //   //std::vector<MeshData> meshes = ModelLoader::LoadFBX("..\\DirectX12\\Assets\\gun\\sniper_0.fbx");    
+ //   auto datas = ModelLoader::LoadFBX("..\\DirectX12\\Assets\\Anim_Voletir_06_OpenVault_Idle.fbx");
+ //   auto meshDatas = ModelLoader::LoadFBX("..\\DirectX12\\Assets\\voletir.fbx");
 
-    // 2. アニメーターの初期化
-    Animator playerAnimator;
-    // FBXにアニメーションが含まれている場合、最初のクリップを再生
-    if (!datas.animations.empty()) {
-        playerAnimator.Initialize(
-            &datas.animations[0],
-            &meshDatas.rootNode,
-            &meshDatas.boneInfoMap // 最初のメッシュのボーンMapを使用
-        );
-    }
+ //   Model playerModel;
 
-    auto& gfx = GraphicsCore::Get();
-    auto ictx = gfx.GetCommandContext();
+ //   // 2. アニメーターの初期化
+ //   Animator playerAnimator;
+ //   // FBXにアニメーションが含まれている場合、最初のクリップを再生
+ //   if (!datas.animations.empty()) {
+ //       playerAnimator.Initialize(
+ //           &datas.animations[0],
+ //           &meshDatas.rootNode,
+ //           &meshDatas.boneInfoMap // 最初のメッシュのボーンMapを使用
+ //       );
+ //   }
 
-    ictx.BeginFrame(gfx.GetCurrentCommandAllocator());
+ //   auto& gfx = GraphicsCore::Get();
+ //   auto ictx = gfx.GetCommandContext();
 
-    // 内部でAssimpがパースし、ctx に対して CopyBufferRegion 命令を積みます
-	Mesh mesh = Mesh();
-    //mesh.Create(meshes[0].vertices.data(), meshes[0].vertices.size(), sizeof(Vertex), meshes[0].indices.data(), meshes[0].indices.size());
+ //   ictx.BeginFrame(gfx.GetCurrentCommandAllocator());
 
-    //playerModel.CreateFromFile("..\\DirectX12\\Assets\\gun\\sniper_0.fbx");
-    playerModel.CreateFromFile("..\\DirectX12\\Assets\\voletir.fbx");
-  
-    ictx.EndFrame();
+ //   // 内部でAssimpがパースし、ctx に対して CopyBufferRegion 命令を積みます
+	//Mesh mesh = Mesh();
+ //   //mesh.Create(meshes[0].vertices.data(), meshes[0].vertices.size(), sizeof(Vertex), meshes[0].indices.data(), meshes[0].indices.size());
 
-    gfx.FlushCommandQueue();
+ //   //playerModel.CreateFromFile("..\\DirectX12\\Assets\\gun\\sniper_0.fbx");
+ //   playerModel.CreateFromFile("..\\DirectX12\\Assets\\voletir.fbx");
+ // 
+ //   ictx.EndFrame();
 
-    playerModel.FreeUploadBuffers();
-    //mesh.FreeUploadBuffers();
+ //   gfx.FlushCommandQueue();
 
-	playerModel.AddAnimationClip(datas.animations[0]); // アニメーションクリップを追加    
+ //   playerModel.FreeUploadBuffers();
+ //   //mesh.FreeUploadBuffers();
 
-    datas = ModelLoader::LoadFBX("..\\DirectX12\\Assets\\Anim_Voletir_08_OpenVault_Hit.fbx");
+	//playerModel.AddAnimationClip(datas.animations[0]); // アニメーションクリップを追加    
 
-    
-    playerModel.AddAnimationClip(datas.animations[0]); // アニメーションクリップを追加    
+ //   datas = ModelLoader::LoadFBX("..\\DirectX12\\Assets\\Anim_Voletir_08_OpenVault_Hit.fbx");
 
-	playerModel.PlayAnimation(0); // 最初のアニメーションを再生
+ //   
+ //   playerModel.AddAnimationClip(datas.animations[0]); // アニメーションクリップを追加    
 
-	playerModel.CrossFadeAnimation(1, 1.0f); // 初期状態の更新
+	//playerModel.PlayAnimation(0); // 最初のアニメーションを再生
 
-    // ImGui用の一時変数
-    DirectX::XMFLOAT4 cubeColor = { 0.2f, 0.6f, 0.9f, 1.0f };
-    float rotationAngle = 0.0f;
+	//playerModel.CrossFadeAnimation(1, 1.0f); // 初期状態の更新
 
-    // メインループ
-    bool isRunning = true;
-    while (isRunning) {
-        MSG msg = {};
-        if (PeekMessage(&msg, nullptr, 0, 0, PM_REMOVE)) {
-            // 「×」ボタン等で終了メッセージ(WM_QUIT)を受け取ったらループを抜ける
-            if (msg.message == WM_QUIT) {
-                isRunning = false;
-                continue;
-            }
-            TranslateMessage(&msg);
-            DispatchMessage(&msg);
-        }
-        else {
-            // メッセージがない時（暇な時）にゲームの更新と描画を行う
+ //   // ImGui用の一時変数
+ //   DirectX::XMFLOAT4 cubeColor = { 0.2f, 0.6f, 0.9f, 1.0f };
+ //   float rotationAngle = 0.0f;
 
-            // --- フレーム開始 ---
-            GraphicsCore::Get().BeginFrame();
+ //   // メインループ
+ //   bool isRunning = true;
+ //   while (isRunning) {
+ //       MSG msg = {};
+ //       if (PeekMessage(&msg, nullptr, 0, 0, PM_REMOVE)) {
+ //           // 「×」ボタン等で終了メッセージ(WM_QUIT)を受け取ったらループを抜ける
+ //           if (msg.message == WM_QUIT) {
+ //               isRunning = false;
+ //               continue;
+ //           }
+ //           TranslateMessage(&msg);
+ //           DispatchMessage(&msg);
+ //       }
+ //       else {
+ //           // メッセージがない時（暇な時）にゲームの更新と描画を行う
 
-            // --- ゲームの更新と描画 ---
-            // --- 描画ループ内 ---
-			auto& gfx = GraphicsCore::Get();
-            auto* ctx = &gfx.GetCommandContext();
+ //           // --- フレーム開始 ---
+ //           GraphicsCore::Get().BeginFrame();
 
-            // 1. アニメーションの計算 (dtは前フレームからの経過時間。例: 0.016f)
-            //playerAnimator.UpdateAnimation(0.016f);
+ //           // --- ゲームの更新と描画 ---
+ //           // --- 描画ループ内 ---
+	//		auto& gfx = GraphicsCore::Get();
+ //           auto* ctx = &gfx.GetCommandContext();
 
-            // 2. 計算結果のボーン行列配列を取得
-            const auto& boneMatrices = playerAnimator.GetFinalBoneMatrices();
-            
-            // 1. ビュー行列（カメラの位置と向き）
-            DirectX::XMVECTOR eye = DirectX::XMVectorSet(0.0f, -5.0f, -5.0f, 0.0f); // カメラをZ軸の手前(-5)、少し上(2)に配置
-            DirectX::XMVECTOR target = DirectX::XMVectorSet(0.0f, 0.0f, 0.0f, 0.0f); // キューブの中心（原点）を見る
-            DirectX::XMVECTOR up = DirectX::XMVectorSet(0.0f, 1.0f, 0.0f, 0.0f); // 上はY方向
-            DirectX::XMMATRIX view = DirectX::XMMatrixLookAtLH(eye, target, up);
+ //           // 1. アニメーションの計算 (dtは前フレームからの経過時間。例: 0.016f)
+ //           //playerAnimator.UpdateAnimation(0.016f);
 
-            // 2. プロジェクション行列（遠近感と画角）
-            float fov = DirectX::XMConvertToRadians(45.0f);
-            float aspect = 1920.0f / 1080.0f; // ウィンドウサイズに合わせる
-            DirectX::XMMATRIX proj = DirectX::XMMatrixPerspectiveFovLH(fov, aspect, 0.1f, 100.0f);
+ //           // 2. 計算結果のボーン行列配列を取得
+ //           const auto& boneMatrices = playerAnimator.GetFinalBoneMatrices();
+ //           
+ //           // 1. ビュー行列（カメラの位置と向き）
+ //           DirectX::XMVECTOR eye = DirectX::XMVectorSet(0.0f, -5.0f, -5.0f, 0.0f); // カメラをZ軸の手前(-5)、少し上(2)に配置
+ //           DirectX::XMVECTOR target = DirectX::XMVectorSet(0.0f, 0.0f, 0.0f, 0.0f); // キューブの中心（原点）を見る
+ //           DirectX::XMVECTOR up = DirectX::XMVectorSet(0.0f, 1.0f, 0.0f, 0.0f); // 上はY方向
+ //           DirectX::XMMATRIX view = DirectX::XMMatrixLookAtLH(eye, target, up);
 
-            // 3. 掛け合わせて ViewProjection にする
-            auto viewProj = DirectX::XMMatrixMultiply(view, proj);
-            auto world = DirectX::XMMatrixRotationY(DirectX::XMConvertToRadians(rotationAngle));
+ //           // 2. プロジェクション行列（遠近感と画角）
+ //           float fov = DirectX::XMConvertToRadians(45.0f);
+ //           float aspect = 1920.0f / 1080.0f; // ウィンドウサイズに合わせる
+ //           DirectX::XMMATRIX proj = DirectX::XMMatrixPerspectiveFovLH(fov, aspect, 0.1f, 100.0f);
 
-            auto wvp = DirectX::XMMatrixMultiply(world, viewProj);
+ //           // 3. 掛け合わせて ViewProjection にする
+ //           auto viewProj = DirectX::XMMatrixMultiply(view, proj);
+ //           auto world = DirectX::XMMatrixRotationY(DirectX::XMConvertToRadians(rotationAngle));
 
-            auto viewProjTransposed = DirectX::XMMatrixTranspose(viewProj);
-            auto worldTransposed = DirectX::XMMatrixTranspose(world);
+ //           auto wvp = DirectX::XMMatrixMultiply(world, viewProj);
 
-			playerModel.Update(0.016f); // 例として16ms経過したと仮定
+ //           auto viewProjTransposed = DirectX::XMMatrixTranspose(viewProj);
+ //           auto worldTransposed = DirectX::XMMatrixTranspose(world);
 
-            // 3. マテリアルへのデータセット（名前ベース！）
-            cubeMaterial->SetMatrix("viewProjection", viewProj);
-            cubeMaterial->SetMatrix("world", world);
+	//		playerModel.Update(0.016f); // 例として16ms経過したと仮定
 
-            if (!boneMatrices.empty()) {
+ //           // 3. マテリアルへのデータセット（名前ベース！）
+ //           cubeMaterial->SetMatrix("viewProjection", viewProj);
+ //           cubeMaterial->SetMatrix("world", world);
 
-                // データサイズ = 行列のサイズ(64バイト) × ボーンの数
-                //cubeMaterial->SetData("boneTransforms", boneMatrices.data(), sizeof(DirectX::XMMATRIX) * boneMatrices.size());
-            }
+ //           if (!boneMatrices.empty()) {
 
-            // ディスクリプタヒープをセット
-            ID3D12DescriptorHeap* ppHeaps[] = { gfx.GetSrvHeapManager().GetHeap() };
-            ctx->GetCommandList()->SetDescriptorHeaps(_countof(ppHeaps), ppHeaps);
+ //               // データサイズ = 行列のサイズ(64バイト) × ボーンの数
+ //               //cubeMaterial->SetData("boneTransforms", boneMatrices.data(), sizeof(DirectX::XMMATRIX) * boneMatrices.size());
+ //           }
 
-            // マテリアルをバインド（裏側でリングバッファの確保とmemcpy、PSOセットが走る）
-            //cubeMaterial->Bind();
+ //           // ディスクリプタヒープをセット
+ //           ID3D12DescriptorHeap* ppHeaps[] = { gfx.GetSrvHeapManager().GetHeap() };
+ //           ctx->GetCommandList()->SetDescriptorHeaps(_countof(ppHeaps), ppHeaps);
 
-            // 描画範囲（ビューポート）と切り抜き範囲（シザー矩形）を画面サイズに設定
-            D3D12_VIEWPORT viewport = { 0.0f, 0.0f, 1920.0f, 1080.0f, 0.0f, 1.0f };
-            D3D12_RECT scissorRect = { 0, 0, 1920, 1080 };
+ //           // マテリアルをバインド（裏側でリングバッファの確保とmemcpy、PSOセットが走る）
+ //           //cubeMaterial->Bind();
 
-            ctx->GetCommandList()->RSSetViewports(1, &viewport);
-            ctx->GetCommandList()->RSSetScissorRects(1, &scissorRect);
+ //           // 描画範囲（ビューポート）と切り抜き範囲（シザー矩形）を画面サイズに設定
+ //           D3D12_VIEWPORT viewport = { 0.0f, 0.0f, 1920.0f, 1080.0f, 0.0f, 1.0f };
+ //           D3D12_RECT scissorRect = { 0, 0, 1920, 1080 };
 
-            // 頂点・インデックスバッファのセット
-            //ctx->GetCommandList()->IASetVertexBuffers(0, 1, &mesh.GetVertexBufferView());
-            //ctx->GetCommandList()->IASetIndexBuffer(&mesh.GetIndexBufferView());
-            ctx->GetCommandList()->IASetPrimitiveTopology(D3D_PRIMITIVE_TOPOLOGY_TRIANGLELIST);
+ //           ctx->GetCommandList()->RSSetViewports(1, &viewport);
+ //           ctx->GetCommandList()->RSSetScissorRects(1, &scissorRect);
 
-			playerModel.Draw(*cubeMaterial.get());
+ //           // 頂点・インデックスバッファのセット
+ //           //ctx->GetCommandList()->IASetVertexBuffers(0, 1, &mesh.GetVertexBufferView());
+ //           //ctx->GetCommandList()->IASetIndexBuffer(&mesh.GetIndexBufferView());
+ //           ctx->GetCommandList()->IASetPrimitiveTopology(D3D_PRIMITIVE_TOPOLOGY_TRIANGLELIST);
 
-            D3D12_CPU_DESCRIPTOR_HANDLE rtvHandle = gfx.GetRtvHandle();
-            D3D12_CPU_DESCRIPTOR_HANDLE dsvHandle = gfx.GetDsvHandle();
+	//		playerModel.Draw(*cubeMaterial.get());
 
-            //ctx->GetCommandList()->DrawIndexedInstanced(mesh.GetIndexCount(), 1, 0, 0, 0);
+ //           D3D12_CPU_DESCRIPTOR_HANDLE rtvHandle = gfx.GetRtvHandle();
+ //           D3D12_CPU_DESCRIPTOR_HANDLE dsvHandle = gfx.GetDsvHandle();
 
-
-
-			editor.BeginUI(); // ImGuiのフレーム開始
-            // 1. ImGuiのUI構築
-            ImGui::Begin("Inspector");
-            ImGui::ColorEdit4("Cube Color", &cubeColor.x); // カラーピッカー！
-            ImGui::SliderFloat("Rotation", &rotationAngle, 0.0f, 360.0f);
-            ImGui::End();
+ //           //ctx->GetCommandList()->DrawIndexedInstanced(mesh.GetIndexCount(), 1, 0, 0, 0);
 
 
-            // --- エディタUIの構築と描画 ---
-            editor.RenderUI();
+
+	//		editor.BeginUI(); // ImGuiのフレーム開始
+ //           // 1. ImGuiのUI構築
+ //           ImGui::Begin("Inspector");
+ //           ImGui::ColorEdit4("Cube Color", &cubeColor.x); // カラーピッカー！
+ //           ImGui::SliderFloat("Rotation", &rotationAngle, 0.0f, 360.0f);
+ //           ImGui::End();
 
 
-            // --- フレーム終了（画面表示） ---
-            GraphicsCore::Get().EndFrame();
-        }
-    }
+ //           // --- エディタUIの構築と描画 ---
+ //           editor.RenderUI();
 
-    // クリーンアップ
-    GraphicsCore::Get().FlushCommandQueue(); // GPUの処理完了を待つ
-    editor.Shutdown();
+
+ //           // --- フレーム終了（画面表示） ---
+ //           GraphicsCore::Get().EndFrame();
+ //       }
+ //   }
+
+ //   // クリーンアップ
+ //   GraphicsCore::Get().FlushCommandQueue(); // GPUの処理完了を待つ
+ //   editor.Shutdown();
 
     return 0;
 }

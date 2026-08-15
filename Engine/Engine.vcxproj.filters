@@ -28,6 +28,15 @@
     <Filter Include="ソース ファイル\System">
       <UniqueIdentifier>{e9ef9584-6285-400a-acad-648e5e21f2fb}</UniqueIdentifier>
     </Filter>
+    <Filter Include="ソース ファイル\ImGui">
+      <UniqueIdentifier>{60c06d7f-5d24-417b-8017-beb0417fb15a}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="ヘッダー ファイル\ImGui">
+      <UniqueIdentifier>{eec04888-0aae-482f-92ac-9e9f4f83bdee}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="ヘッダー ファイル\Json">
+      <UniqueIdentifier>{85351b77-5e54-4613-8d83-b76518b14027}</UniqueIdentifier>
+    </Filter>
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="src\Engine_pch.cpp">
@@ -89,6 +98,30 @@
     </ClCompile>
     <ClCompile Include="src\EffekseerManager.cpp">
       <Filter>ソース ファイル</Filter>
+    </ClCompile>
+    <ClCompile Include="src\EngineCore.cpp">
+      <Filter>ソース ファイル</Filter>
+    </ClCompile>
+    <ClCompile Include="src\imgui_widgets.cpp">
+      <Filter>ソース ファイル\ImGui</Filter>
+    </ClCompile>
+    <ClCompile Include="src\imgui.cpp">
+      <Filter>ソース ファイル\ImGui</Filter>
+    </ClCompile>
+    <ClCompile Include="src\imgui_demo.cpp">
+      <Filter>ソース ファイル\ImGui</Filter>
+    </ClCompile>
+    <ClCompile Include="src\imgui_draw.cpp">
+      <Filter>ソース ファイル\ImGui</Filter>
+    </ClCompile>
+    <ClCompile Include="src\imgui_impl_dx12.cpp">
+      <Filter>ソース ファイル\ImGui</Filter>
+    </ClCompile>
+    <ClCompile Include="src\imgui_impl_win32.cpp">
+      <Filter>ソース ファイル\ImGui</Filter>
+    </ClCompile>
+    <ClCompile Include="src\imgui_tables.cpp">
+      <Filter>ソース ファイル\ImGui</Filter>
     </ClCompile>
   </ItemGroup>
   <ItemGroup>
@@ -205,6 +238,36 @@
     </ClInclude>
     <ClInclude Include="include\EntityID.h">
       <Filter>ヘッダー ファイル\ECS</Filter>
+    </ClInclude>
+    <ClInclude Include="include\EngineCore.h">
+      <Filter>ヘッダー ファイル</Filter>
+    </ClInclude>
+    <ClInclude Include="include\imconfig.h">
+      <Filter>ヘッダー ファイル\ImGui</Filter>
+    </ClInclude>
+    <ClInclude Include="include\imgui.h">
+      <Filter>ヘッダー ファイル\ImGui</Filter>
+    </ClInclude>
+    <ClInclude Include="include\imgui_impl_dx12.h">
+      <Filter>ヘッダー ファイル\ImGui</Filter>
+    </ClInclude>
+    <ClInclude Include="include\imgui_impl_win32.h">
+      <Filter>ヘッダー ファイル\ImGui</Filter>
+    </ClInclude>
+    <ClInclude Include="include\imgui_internal.h">
+      <Filter>ヘッダー ファイル\ImGui</Filter>
+    </ClInclude>
+    <ClInclude Include="include\imstb_rectpack.h">
+      <Filter>ヘッダー ファイル\ImGui</Filter>
+    </ClInclude>
+    <ClInclude Include="include\imstb_textedit.h">
+      <Filter>ヘッダー ファイル\ImGui</Filter>
+    </ClInclude>
+    <ClInclude Include="include\imstb_truetype.h">
+      <Filter>ヘッダー ファイル\ImGui</Filter>
+    </ClInclude>
+    <ClInclude Include="include\json.hpp">
+      <Filter>ヘッダー ファイル\Json</Filter>
     </ClInclude>
   </ItemGroup>
 </Project>

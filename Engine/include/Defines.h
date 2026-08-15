@@ -28,8 +28,8 @@ static const float GRAVITY = 0.98f;
 //static const char* APP_TITLE = "ENDLESS_SHOOT";
 
 // 画面サイズ
-static const int SCREEN_WIDTH	= 1280;
-static const int SCREEN_HEIGHT	= 720;
+static const int SCREEN_WIDTH	= 1920;
+static const int SCREEN_HEIGHT	= 1080;
 
 static constexpr float SCREEN_HALF_WIDTH = SCREEN_WIDTH * 0.5f;
 static constexpr float SCREEN_HALF_HEIGHT = SCREEN_HEIGHT * 0.5f;

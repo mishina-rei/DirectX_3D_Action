@@ -34,6 +34,12 @@ ID3D12PipelineState* PSOCache::GetOrCreatePSO(ID3D12Device* device, const PSOKey
     // --- 頂点レイアウト (エンジン標準の3Dモデル用と仮定) ---
     auto dynamicLayout = GenerateInputLayoutFromVS(key.VS);
 
+    // 全要素の push_back が終わって「絶対にメモリアドレスが変わらない状態」
+    // になってから、まとめてポインタを繋ぐ
+    for (size_t i = 0; i < dynamicLayout.Elements.size(); ++i) {
+        dynamicLayout.Elements[i].SemanticName = dynamicLayout.SemanticNames[i].c_str();
+    }
+
     psoDesc.InputLayout = { dynamicLayout.Elements.data(), (UINT)(dynamicLayout.Elements.size()) };
 
     // --- ラスタライザーステート (カリング設定の反映) ---
@@ -176,9 +182,9 @@ DynamicInputLayout GenerateInputLayoutFromVS(IDxcBlob* vsBlob) {
 
     // 全要素の push_back が終わって「絶対にメモリアドレスが変わらない状態」
     // になってから、まとめてポインタを繋ぐ
-    for (size_t i = 0; i < layout.Elements.size(); ++i) {
-        layout.Elements[i].SemanticName = layout.SemanticNames[i].c_str();
-    }
+    //for (size_t i = 0; i < layout.Elements.size(); ++i) {
+    //    layout.Elements[i].SemanticName = layout.SemanticNames[i].c_str();
+    //}
 
     return layout;
 }

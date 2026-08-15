@@ -27,7 +27,7 @@ public:
     // テクスチャのセット (GPUハンドルを渡す)
     void SetTexture(D3D12_GPU_DESCRIPTOR_HANDLE textureGpuHandle);
 
-    // --- 描画時のバインド処理 ---
+    // 描画時のバインド処理
     void Bind();
 
 private:

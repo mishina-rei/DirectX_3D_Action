@@ -27,11 +27,24 @@ void Sprite::Init()
     };
     uint32_t indices[] = { 0, 1, 2, 2, 1, 3 };
 
+
+    auto& gfx = GraphicsCore::Get();
+    auto ictx = gfx.GetCommandContext();
+
+    ictx.BeginFrame(gfx.GetCurrentCommandAllocator());
+
     m_quadMesh = std::make_unique<Mesh>();
     m_quadMesh->Create(vertices, 4, sizeof(SpriteVertex), indices, 6, DXGI_FORMAT_R32_UINT);
 
-    // スプライト用マテリアルの初期化 (SpriteVS.hlsl, SpritePS.hlsl を用意する想定)
-    m_material = std::make_unique<Material>("SpriteVS", "SpritePS");
+
+    ictx.EndFrame();
+
+    gfx.FlushCommandQueue();
+
+    m_quadMesh->FreeUploadBuffers();
+
+    // スプライト用マテリアルの初期化
+    m_material = std::make_unique<Material>("VS_Sprite", "PS_Sprite");
 
     // スプライトなので透過(アルファブレンド)を有効化、カリングは無効
     m_material->SetTransparent(true);
@@ -69,6 +82,7 @@ void Sprite::Draw()
 
     // 描画
     auto& ctx = GraphicsCore::Get().GetCommandContext();
+    ctx.GetCommandList()->IASetPrimitiveTopology(D3D_PRIMITIVE_TOPOLOGY_TRIANGLELIST);
     ctx.SetVertexBuffer(0, m_quadMesh->GetVertexBufferView());
     ctx.SetIndexBuffer(m_quadMesh->GetIndexBufferView());
     ctx.DrawIndexedInstanced(m_quadMesh->GetIndexCount(), 1, 0, 0, 0);
