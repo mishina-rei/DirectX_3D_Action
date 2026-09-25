@@ -1,15 +1,16 @@
-#pragma once
+ï»¿#pragma once
 
+#include "Archive.h"
 #include "Model.h"
-#include "Material.h" // ’Ç‰Á
+#include "Material.h"
 #include "Vector.h"
 #include <memory>
 
 struct MeshRenderer
 {
-    std::shared_ptr<Model> pModel = nullptr;
+    AssetRef<Model> model;
 
-    // DX12—pƒ}ƒeƒŠƒAƒ‹
+    // DX12ç”¨ãƒžãƒ†ãƒªã‚¢ãƒ«
     std::shared_ptr<Material> material = nullptr;
 
     bool isVisible = true;
@@ -17,11 +18,25 @@ struct MeshRenderer
 
     MeshRenderer()
     {
-        pModel = std::make_shared<Model>();
+        material = std::make_shared<Material>("VS_Standard", "PS_Standard");
     }
 
     MeshRenderer(std::shared_ptr<Model> _pModel, bool visible = true)
-        : pModel(_pModel), isVisible(visible)
+        : isVisible(visible)
     {
+        model.asset = _pModel;
+        material = std::make_shared<Material>("VS_Standard", "PS_Standard");
+    }
+
+    void SetModel(const std::string& filePath)
+    {
+        model.Load(filePath);
+    }
+
+    template<class Archive>
+    void Reflect(Archive& archive) {
+        archive.Property("Model", model);
+        archive.Property("Visible", isVisible);
+        archive.Property("Color", color);
     }
 };

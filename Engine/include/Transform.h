@@ -15,6 +15,13 @@ struct Transform
 		, scale(1.0f, 1.0f, 1.0f)
 	{}
 
+	template<class Archive>
+	void Reflect(Archive& archive) {
+		archive.Property("Position", position);
+		archive.Property("Rotation", rotation);
+		archive.Property("Scale", scale);
+	}
+
 	// 回転させる
 	void Rotate(Quaternion q)
 	{

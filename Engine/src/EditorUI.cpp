@@ -1,8 +1,15 @@
-#include "Engine_pch.h"
+﻿#include "Engine_pch.h"
 
 #include "EditorUI.h"
 #include "GraphicsCore.h"
 #include <stdexcept>
+#include "Name.h" 
+
+#include <fstream>
+#include <iomanip> // 綺麗に改行してJSONを保存するため
+#include "UUID.h"
+#include "MeshRenderer.h"
+#include "SpriteRenderer.h"
 
 
 void EditorUI::Initialize(HWND hwnd) {
@@ -38,10 +45,6 @@ void EditorUI::Initialize(HWND hwnd) {
     if (!ImGui_ImplDX12_CreateDeviceObjects()) {
         throw std::runtime_error("ImGui");
     }
-
-    // テスト用の初期オブジェクト
-    sceneObjects.push_back({ "Player", {0, 0, 0} });
-    sceneObjects.push_back({ "Enemy", {5, 0, 0} });
 }
 
 void EditorUI::Shutdown()
@@ -64,11 +67,30 @@ void EditorUI::BeginUI()
     ImGui::DockSpaceOverViewport(0,nullptr, ImGuiDockNodeFlags_PassthruCentralNode);
 }
 
-void EditorUI::RenderUI()
+void EditorUI::RenderUI(ECS::World* world)
 {
+    // エディタのメインメニューバーを描画
+    if (ImGui::BeginMainMenuBar()) {
+        if (ImGui::BeginMenu("File")) {
 
-    DrawHierarchyWindow();
-    DrawInspectorWindow();
+            // Save ボタン
+            if (ImGui::MenuItem("Save Scene")) {
+                // プロジェクトフォルダのルートに scene.json として保存
+                SaveScene(world, "Assets\\scene\\scene.json");
+            }
+
+            if (ImGui::MenuItem("Load Scene")) {
+                nextScene = "Assets\\scene\\scene.json";
+            }
+
+            ImGui::EndMenu();
+        }
+        ImGui::EndMainMenuBar();
+    }
+
+    ImGui::Text("DEBUG: Current Selected ID = %lld", (long long)selectedEntityID);
+    DrawHierarchyWindow(world);
+    DrawInspectorWindow(world);
 
     // 描画データ生成
     ImGui::Render();
@@ -83,45 +105,172 @@ void EditorUI::RenderUI()
     ImGui_ImplDX12_RenderDrawData(ImGui::GetDrawData(), commandList);
 }
 
-void EditorUI::DrawHierarchyWindow() {
+void EditorUI::Update(ECS::World* world)
+{
+    // ロード予約が入っていたら実行する
+    if (!nextScene.empty()) {
+
+        // ！！超重要！！
+        // 前のフレームのGPU描画が完全に終わるのを待機する
+        GraphicsCore::Get().FlushCommandQueue();
+
+        // 実際にシーンを破棄して読み込む
+        LoadScene(world, nextScene);
+
+        // 予約フラグをクリア
+        nextScene.clear();
+    }
+}
+
+void EditorUI::SaveScene(ECS::World* world, const std::string& filepath)
+{
+    json sceneJson;
+    sceneJson["Entities"] = json::array(); // エンティティの配列を作成
+
+    // NameComponent を持つ全エンティティを保存対象としてループ
+    world->ForEachComponent<Name>([&](ECS::EntityID id, Name& nameComp) {
+
+        json entityJson;
+        entityJson["EntityID"] = static_cast<uint32_t>(id);
+
+        // 登録されている全コンポーネントの serialize を順番に呼ぶ
+        for (auto& info : componentRegistry) {
+            info.serialize(world, id, entityJson);
+        }
+
+        // 配列に追加
+        sceneJson["Entities"].push_back(entityJson);
+        });
+
+    // ファイルに書き出し (dump(4) でインデントを4マスにして見やすくする)
+    std::ofstream file(filepath);
+    if (file.is_open()) {
+        file << sceneJson.dump(4);
+        file.close();
+    }
+}
+
+void EditorUI::LoadScene(ECS::World* world, const std::string& filepath)
+{
+    std::ifstream file(filepath);
+    if (!file.is_open()) {
+        // ファイルが無ければ何もしない
+        return;
+    }
+
+    json sceneJson;
+    file >> sceneJson;
+    file.close();
+
+    if (!sceneJson.contains("Entities")) return;
+
+    // 現在のシーンにあるオブジェクトをすべて削除する（クリーンアップ）
+    std::vector<ECS::EntityID> entitiesToDelete;
+
+    // NameComponentを持っている全エンティティをリストアップ
+    world->ForEachComponent<Name>([&](ECS::EntityID id, Name& nameComp) {
+        entitiesToDelete.push_back(id);
+        });
+
+    // リストアップしたエンティティを削除
+    for (auto id : entitiesToDelete) {
+        world->DeleteEntity(id);
+    }
+
+    // 選択状態をリセットして安全を確保
+    selectedEntityID = ECS::INVALID_ENTITY_ID;
+
+        auto& gfx = GraphicsCore::Get();
+    auto ictx = gfx.GetCommandContext();
+    ictx.BeginFrame(gfx.GetCurrentCommandAllocator());
+
+    // JSONからエンティティを復元する
+    for (const auto& entityJson : sceneJson["Entities"]) {
+        ECS::EntityID newId = world->CreateEntity();
+        for (auto& info : componentRegistry) {
+            info.deserialize(world, newId, entityJson);
+        }
+    }
+
+    ictx.EndFrame();
+    gfx.FlushCommandQueue();
+
+    // アップロードバッファの解放
+    world->ForEachComponent<MeshRenderer>([](ECS::EntityID id, MeshRenderer& mr) {
+        if (mr.model.asset) mr.model.asset->FreeUploadBuffers();
+    });
+    world->ForEachComponent<SpriteRenderer>([](ECS::EntityID id, SpriteRenderer& sr) {
+        if (sr.texture.asset) sr.texture.asset->FreeUploadBuffer();
+    });
+
+    // UUID から 実際の新しい EntityID を見つけるための辞書
+    std::unordered_map<uint64_t, ECS::EntityID> uuidToEntityMap;
+
+    // 現在シーンにいる全エンティティを走査して辞書に登録する
+    world->ForEachComponent<UUIDComponent>([&](ECS::EntityID id, UUIDComponent& uuidComp) {
+        uuidToEntityMap[uuidComp.id] = id;
+        });
+
+    // すべてのコンポーネントの参照を解決する
+    world->ForEachComponent<UUIDComponent>([&](ECS::EntityID id, UUIDComponent& uuidComp) {
+        for (auto& info : componentRegistry) {
+            // 各コンポーネント内のEntityRefを更新
+            info.resolveLinks(world, id, uuidToEntityMap);
+        }
+        });
+}
+
+void EditorUI::DrawHierarchyWindow(ECS::World* world) {
     ImGui::Begin("Hierarchy");
 
     if (ImGui::Button("Create Empty Object")) {
-        sceneObjects.push_back({ "New Object " + std::to_string(sceneObjects.size()) });
+        auto newEntity = world->CreateEntity();
+        world->AddComponent(newEntity, UUIDComponent{});
+        world->AddComponent(newEntity, Name{ "New Object" });
     }
 
     ImGui::Separator();
 
-    for (int i = 0; i < sceneObjects.size(); i++) {
-        bool isSelected = (selectedObjectIndex == i);
-        if (ImGui::Selectable(sceneObjects[i].Name.c_str(), isSelected)) {
-            selectedObjectIndex = i;
+    // NameComponentを持っている全エンティティをリスト表示
+    world->ForEachComponent<Name>([&](ECS::EntityID id, Name& nameComp) {
+
+        // エンティティIDをImGuiの内部IDとして登録する
+        ImGui::PushID(static_cast<int>(id));
+
+        bool isSelected = (selectedEntityID == id);
+        if (ImGui::Selectable(nameComp.name.c_str(), isSelected)) {
+            selectedEntityID = id;
         }
-    }
+
+        // 解除
+        ImGui::PopID();
+
+        });
     ImGui::End();
 }
 
-void EditorUI::DrawInspectorWindow() {
+void EditorUI::DrawInspectorWindow(ECS::World* world) {
     ImGui::Begin("Inspector");
 
-    if (selectedObjectIndex >= 0 && selectedObjectIndex < sceneObjects.size()) {
-        auto& obj = sceneObjects[selectedObjectIndex];
+    if (selectedEntityID != ECS::INVALID_ENTITY_ID) {
 
-        // 名前
-        char nameBuf[128];
-        strcpy_s(nameBuf, obj.Name.c_str());
-        if (ImGui::InputText("Name", nameBuf, IM_ARRAYSIZE(nameBuf))) {
-            obj.Name = nameBuf;
+        // 登録された全コンポーネントのUIを自動生成
+        for (auto& info : componentRegistry) {
+            info.drawInspector(world, selectedEntityID);
         }
 
         ImGui::Separator();
 
-        // トランスフォーム        
-        ImGui::DragFloat3("Position", &obj.Position.x, 0.1f);
-        ImGui::DragFloat3("Rotation", &obj.Rotation.x, 1.0f);
-        ImGui::DragFloat3("Scale", &obj.Scale.x, 0.1f);
-
-        ImGui::Checkbox("Visible", &obj.IsVisible);
+        // コンポーネント追加メニューも自動生成
+        if (ImGui::Button("Add Component")) {
+            ImGui::OpenPopup("AddComponentPopup");
+        }
+        if (ImGui::BeginPopup("AddComponentPopup")) {
+            for (auto& info : componentRegistry) {
+                info.addComponent(world, selectedEntityID);
+            }
+            ImGui::EndPopup();
+        }
     }
     else {
         ImGui::Text("No object selected.");

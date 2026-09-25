@@ -1,4 +1,7 @@
 #include <windows.h>
+#include <exception>
+#include <fstream>
+#include <string>
 
 #include "DirectX12.h"
 #include "Engine.h"

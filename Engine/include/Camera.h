@@ -11,6 +11,13 @@ struct Camera
 	float aspect = (float)SCREEN_WIDTH / (float)SCREEN_HEIGHT;
 	float nearClip = 0.1f;
 	float farClip = 1000.0f;
+
+	template<class Archive>
+	void Reflect(Archive& archive) {
+		archive.Property("FOV", fov);
+		archive.Property("NearClip", nearClip);
+		archive.Property("FarClip", farClip);
+	}
     
 	// 射影行列の取得
 	DirectX::XMFLOAT4X4 GetProjectionMatrix() const

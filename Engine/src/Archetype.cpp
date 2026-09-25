@@ -1,5 +1,7 @@
 #include "Archetype.h"
 
+#include "Engine_pch.h"
+
 size_t ECS::Archetype::AddEntity(EntityID id)
 {
     entities.push_back(id);

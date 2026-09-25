@@ -18,5 +18,6 @@
 #include <mmsystem.h>
 #include <imgui_impl_dx12.h>
 #include "json.hpp"
+#include <functional>
 
 #endif //ENGINE_PCH_H

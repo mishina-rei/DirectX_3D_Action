@@ -54,9 +54,6 @@
     <ClCompile Include="src\EditorUI.cpp">
       <Filter>ソース ファイル</Filter>
     </ClCompile>
-    <ClCompile Include="..\..\..\ENDLESSSHOOT\ENDLESS-SHOOT\ENDLESS_SHOOT\src\Archetype.cpp">
-      <Filter>ソース ファイル\ECS</Filter>
-    </ClCompile>
     <ClCompile Include="src\world.cpp">
       <Filter>ソース ファイル\ECS</Filter>
     </ClCompile>
@@ -90,9 +87,6 @@
     <ClCompile Include="..\..\..\ENDLESSSHOOT\ENDLESS-SHOOT\ENDLESS_SHOOT\src\Audio.cpp">
       <Filter>ソース ファイル</Filter>
     </ClCompile>
-    <ClCompile Include="..\..\..\ENDLESSSHOOT\ENDLESS-SHOOT\ENDLESS_SHOOT\src\Input.cpp">
-      <Filter>ソース ファイル</Filter>
-    </ClCompile>
     <ClCompile Include="src\Sprite.cpp">
       <Filter>ソース ファイル</Filter>
     </ClCompile>
@@ -122,6 +116,12 @@
     </ClCompile>
     <ClCompile Include="src\imgui_tables.cpp">
       <Filter>ソース ファイル\ImGui</Filter>
+    </ClCompile>
+    <ClCompile Include="src\Archetype.cpp">
+      <Filter>ソース ファイル\ECS</Filter>
+    </ClCompile>
+    <ClCompile Include="src\Input.cpp">
+      <Filter>ソース ファイル</Filter>
     </ClCompile>
   </ItemGroup>
   <ItemGroup>
@@ -268,6 +268,18 @@
     </ClInclude>
     <ClInclude Include="include\json.hpp">
       <Filter>ヘッダー ファイル\Json</Filter>
+    </ClInclude>
+    <ClInclude Include="include\Archive.h">
+      <Filter>ヘッダー ファイル</Filter>
+    </ClInclude>
+    <ClInclude Include="include\ComponentMetaData.h">
+      <Filter>ヘッダー ファイル</Filter>
+    </ClInclude>
+    <ClInclude Include="include\Name.h">
+      <Filter>ヘッダー ファイル\Component</Filter>
+    </ClInclude>
+    <ClInclude Include="include\UUID.h">
+      <Filter>ヘッダー ファイル\Component</Filter>
     </ClInclude>
   </ItemGroup>
 </Project>

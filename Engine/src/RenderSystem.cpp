@@ -37,7 +37,7 @@ void RenderSystem::Draw(ECS::World* world)
     // 3Dモデル (MeshRenderer) の描画
     // ==================================================
     world->ForEach<MeshRenderer, Transform>([&](ECS::EntityID id, MeshRenderer& mesh, Transform& transform) {
-        if (!mesh.isVisible || !mesh.pModel) return;
+        if (!mesh.isVisible || !mesh.model.asset) return;
 
 		// トポロジーのセット（TriangleList固定）
         cmdList->IASetPrimitiveTopology(D3D_PRIMITIVE_TOPOLOGY_TRIANGLELIST);
@@ -58,7 +58,7 @@ void RenderSystem::Draw(ECS::World* world)
         auto material = mesh.material.get();
 
         // モデル描画
-        mesh.pModel->Draw(*material);
+        mesh.model.asset->Draw(*material);
         });
 
     // ==================================================
@@ -69,7 +69,7 @@ void RenderSystem::Draw(ECS::World* world)
     // Sprite::SetUIState(false); // 通常スプライトなのでZテスト有効
 
     world->ForEach<SpriteRenderer, Transform>([&](ECS::EntityID id, SpriteRenderer& sprite, Transform& transform) {
-        if (!sprite.isVisible || !sprite.pTexture || sprite.isUI) return;
+        if (!sprite.isVisible || !sprite.texture.asset || sprite.isUI) return;
 
         DirectX::XMMATRIX T = DirectX::XMMatrixTranslationFromVector(transform.position);
         DirectX::XMMATRIX R = DirectX::XMMatrixRotationQuaternion(transform.rotation);
@@ -80,7 +80,7 @@ void RenderSystem::Draw(ECS::World* world)
         DirectX::XMStoreFloat4x4(&worldOut, matWorld);
 
         Sprite::SetWorld(worldOut);
-        Sprite::SetTexture(sprite.pTexture.get());
+        Sprite::SetTexture(sprite.texture.get());
         Sprite::SetColor(DirectX::XMFLOAT4(sprite.color.x, sprite.color.y, sprite.color.z, sprite.color.w));
         Sprite::SetSize(DirectX::XMFLOAT2(1.0f, 1.0f));
         Sprite::SetOffset(DirectX::XMFLOAT2((0.5f - sprite.pivot.x) * sprite.size.x, (0.5f - sprite.pivot.y) * sprite.size.y));
@@ -111,7 +111,7 @@ void RenderSystem::Draw(ECS::World* world)
     std::vector<UIRenderData> uiList;
 
     world->ForEach<SpriteRenderer, Transform>([&](ECS::EntityID id, SpriteRenderer& sprite, Transform& transform) {
-        if (!sprite.isVisible || !sprite.pTexture || !sprite.isUI) return;
+        if (!sprite.isVisible || !sprite.texture.asset || !sprite.isUI) return;
         uiList.push_back({ &sprite, &transform });
         });
 
@@ -139,7 +139,7 @@ void RenderSystem::Draw(ECS::World* world)
         DirectX::XMStoreFloat4x4(&worldOut, matWorld);
 
         Sprite::SetWorld(worldOut);
-        Sprite::SetTexture(sprite.pTexture.get());
+        Sprite::SetTexture(sprite.texture.get());
         Sprite::SetColor(DirectX::XMFLOAT4(sprite.color.x, sprite.color.y, sprite.color.z, sprite.color.w));
         Sprite::SetSize(DirectX::XMFLOAT2(sprite.size.x * sprite.uvScale.x, sprite.size.y * sprite.uvScale.y));
         Sprite::SetOffset(DirectX::XMFLOAT2((0.5f - sprite.pivot.x) * sprite.size.x, (0.5f - sprite.pivot.y) * sprite.size.y));

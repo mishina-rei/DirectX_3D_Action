@@ -10,6 +10,7 @@
 #include "RenderSystem.h"
 
 #include "GraphicsCore.h" 
+#include "EditorUI.h"
 
 // ImGuiのWin32メッセージハンドラを宣言
 extern IMGUI_IMPL_API LRESULT ImGui_ImplWin32_WndProcHandler(HWND hWnd, UINT msg, WPARAM wParam, LPARAM lParam);
@@ -60,6 +61,9 @@ bool EngineCore::Initialize(const std::wstring& title, int width, int height)
     EffekseerManager::Init();
     RenderSystem::Init(); // シャドウマップの初期化等
 
+    // エディタUIの初期化
+    EditorUI::Get().Initialize(m_hwnd);
+
     return true;
 }
 
@@ -83,6 +87,9 @@ void EngineCore::MainLoop()
             if (static_cast<float>(nowTime - preExecTime) >= 1000.0f / 60.0f)
             {
                 UpdateInput();
+
+                EditorUI::Get().Update(SceneManager::GetInstance().GetCurrentScene()->GetWorld());
+
                 SceneManager::GetInstance().Update();
                 EffekseerManager::Update();
 
@@ -91,6 +98,9 @@ void EngineCore::MainLoop()
 
                 // シーン内のすべての描画コマンドを積む
                 SceneManager::GetInstance().Draw();
+
+				EditorUI::Get().BeginUI();
+				EditorUI::Get().RenderUI(SceneManager::GetInstance().GetCurrentScene()->GetWorld());
 
                 GraphicsCore::Get().EndFrame();
 
@@ -105,6 +115,9 @@ void EngineCore::Terminate()
 {
     // GPUの描画処理が完全に終わるのを待つ
     GraphicsCore::Get().FlushCommandQueue();
+    
+    // エディタUIの終了処理
+    EditorUI::Get().Shutdown();
 
     SceneManager::GetInstance().Uninit();
     EffekseerManager::Uninit();
@@ -122,7 +135,20 @@ LRESULT CALLBACK EngineCore::WindowProc(HWND hWnd, UINT message, WPARAM wParam, 
         if (ImGui_ImplWin32_WndProcHandler(hWnd, message, wParam, lParam)) {
             return true;
         }
+
+        // ImGuiが「キーボードやマウスを使っている」場合は、ゲーム側の入力処理を弾く
+        ImGuiIO& io = ImGui::GetIO();
+
+        // UI操作中なら、マウス入力関連のWindowsメッセージをゲーム側に送らない
+        if (io.WantCaptureMouse && (message >= WM_MOUSEFIRST && message <= WM_MOUSELAST)) {
+            return 1;
+        }
+        // UI操作中なら、キーボード入力関連のメッセージをゲーム側に送らない
+        if (io.WantCaptureKeyboard && (message >= WM_KEYFIRST && message <= WM_KEYLAST)) {
+            return 1;
+        }
     }
+
 
     // アプリケーション独自のメッセージ処理
     switch (message) {

@@ -1,5 +1,6 @@
-#pragma once
+﻿#pragma once
 
+#include "Archive.h"
 #include "Texture.h"
 #include "Vector.h"
 #include <memory>
@@ -16,7 +17,7 @@ enum class SpriteLayer
 
 struct SpriteRenderer
 {
-    std::shared_ptr<Texture> pTexture = nullptr;
+    AssetRef<Texture> texture;
 
     Vector4 color = { 1.0f, 1.0f, 1.0f, 1.0f };
     Vector2 size = { 100.0f, 100.0f };
@@ -29,20 +30,21 @@ struct SpriteRenderer
     bool isUI = false;
     SpriteLayer layer = SpriteLayer::Default;
 
-    // Texture に合わせたロード処理
+    // テクスチャ設定関数
     void SetTexture(const std::string& filePath)
     {
-        pTexture = std::make_shared<Texture>();
+        texture.Load(filePath);
+    }
 
-        // char文字列からワイド文字(wstring)への変換
-        int size_needed = MultiByteToWideChar(CP_UTF8, 0, &filePath[0], (int)filePath.size(), NULL, 0);
-        std::wstring wTexPath(size_needed, 0);
-        MultiByteToWideChar(CP_UTF8, 0, &filePath[0], (int)filePath.size(), &wTexPath[0], size_needed);
-
-        // テクスチャのロード
-        pTexture->CreateFromFile(wTexPath);
-
-        // サイズ設定
-        // size = Vector2({float(pTexture->GetWidth()), float(pTexture->GetHeight())});
+    template<class Archive>
+    void Reflect(Archive& archive) {
+        archive.Property("Texture", texture);
+        archive.Property("Visible", isVisible);
+        archive.Property("IsUI", isUI);
+        archive.Property("Color", color);
+        archive.Property("Size", size);
+        archive.Property("Pivot", pivot);
+        archive.Property("UvPos", uvPos);
+        archive.Property("UvScale", uvScale);
     }
 };
