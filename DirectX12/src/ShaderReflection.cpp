@@ -101,7 +101,7 @@ ShaderMetadata ShaderReflection::Reflect(IDxcBlob* vsBlob, IDxcBlob* psBlob, ID3
                 D3D12_ROOT_PARAMETER param = {};
                 param.ParameterType = D3D12_ROOT_PARAMETER_TYPE_DESCRIPTOR_TABLE;
                 param.DescriptorTable.NumDescriptorRanges = 1;
-                // 【重要】srvRanges.data() だと常に[0]を指してしまうため、一番最後に追加された要素のアドレスを渡す
+                // srvRanges.data() だと常に[0]を指してしまうため、一番最後に追加された要素のアドレスを渡す
                 param.DescriptorTable.pDescriptorRanges = &srvRanges.back();
                 param.ShaderVisibility = D3D12_SHADER_VISIBILITY_ALL;
 

@@ -2,8 +2,3 @@
 //
 
 #include "DirectX12_pch.h"
-
-// TODO: これは、ライブラリ関数の例です
-void fnDirectX12()
-{
-}

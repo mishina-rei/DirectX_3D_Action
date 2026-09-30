@@ -28,7 +28,7 @@ struct Transform
 		EntityRef oldParent = parent;
 		archive.Property("Parent", parent);
 
-		// エディタ操作（ImGuiArchive）で親が変わった瞬間に、見た目を維持するようにローカル値を自動調整！
+		// エディタ操作で親が変わった瞬間に、見た目を維持するようにローカル値を自動調整
 		if constexpr (std::is_same_v<Archive, ImGuiArchive>) {
 			if (archive.world && oldParent.id != parent.id) {
 				EntityRef newParent = parent;
@@ -45,10 +45,10 @@ struct Transform
 
 		if (keepWorldTransform && world)
 		{
-			// 1. 変更前のワールド行列を取得
+			// 変更前のワールド行列を取得
 			DirectX::XMMATRIX oldWorld = GetWorldMatrix(world);
 
-			// 2. 新しい親のローカル座標系へと変換 (OldWorld * InvNewParent)
+			// 新しい親のローカル座標系へと変換 (OldWorld * InvNewParent)
 			DirectX::XMMATRIX newLocal = oldWorld;
 			if (newParent.id != ECS::INVALID_ENTITY_ID && world->HasComponent<Transform>(newParent.id))
 			{
@@ -58,7 +58,7 @@ struct Transform
 				newLocal = oldWorld * invParent;
 			}
 
-			// 3. 行列から Scale, Rotation, Translation を分解して代入
+			// 行列から Scale, Rotation, Translation を分解して代入
 			DirectX::XMVECTOR s, r, t;
 			if (DirectX::XMMatrixDecompose(&s, &r, &t, newLocal))
 			{

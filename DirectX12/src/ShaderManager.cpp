@@ -30,8 +30,8 @@ ComPtr<IDxcBlob> ShaderManager::CompileShader(const std::wstring& filePath, cons
         filePath.c_str(),            // エラー出力に表示されるファイル名
         L"-E", entryPoint,           // エントリーポイント
         L"-T", targetProfile,        // ターゲットプロファイル (vs_6_0 など)
-        L"-Zpr",                     // 行列をRow-Majorで扱う (C++のDirectXMathと合わせるのに便利)
-        L"-HV", L"2021"              // HLSL 2021標準を使用 (最新機能を使うため)
+        L"-Zpr",                     // 行列をRow-Majorで扱う
+        L"-HV", L"2021"              // HLSL 2021標準を使用
     };
 
 #if defined(_DEBUG)

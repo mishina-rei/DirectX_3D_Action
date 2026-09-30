@@ -7,7 +7,7 @@
 
 constexpr int MAX_DESCRIPTOR = 1024;
 
-// エラーチェック用マクロ（実際はエラーログ出力などに置き換えてください）
+// エラーチェック用マクロ
 inline void ThrowIfFailed(HRESULT hr) {
     if (FAILED(hr)) {
         throw std::runtime_error("DirectX 12 API Error!");
@@ -188,7 +188,7 @@ void GraphicsCore::BeginFrame() {
     commandContext.GetCommandList()->ClearDepthStencilView(
         dsvHandle,
         D3D12_CLEAR_FLAG_DEPTH,
-        1.0f, // 1.0f (一番奥) でクリアするのが超重要！
+        1.0f, // 1.0f (一番奥) でクリアする
         0,
         0,
         nullptr

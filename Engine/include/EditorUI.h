@@ -87,7 +87,7 @@ public:
         info.resolveLinks = [name](ECS::World* world, ECS::EntityID id, const std::unordered_map<uint64_t, ECS::EntityID>& uuidMap) {
             if (world->HasComponent<T>(id)) {
                 auto& comp = world->GetComponent<T>(id);
-                // リンク解決専用アーカイバを流し込む！
+                // リンク解決専用アーカイバ
                 ResolveArchive archive(uuidMap);
                 comp.Reflect(archive);
             }

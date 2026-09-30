@@ -91,7 +91,6 @@ void Animator::CalculateBoneTransform(const NodeData* node, DirectX::XMMATRIX pa
             bool hasNextAnim = GetLocalTransform(nextClip, nodeName, nextTime, pos2, scale2, rot2);
 
             if (hasNextAnim) {
-                // ▼ ここがブレンドの魔法！ DirectXMathで補間する ▼
 
                 // 位置の線形補間 (Lerp)
                 pos1 = DirectX::XMVectorLerp(pos1, pos2, blendFactor);

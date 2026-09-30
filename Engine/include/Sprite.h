@@ -36,7 +36,7 @@ public:
 
 private:
     static std::unique_ptr<Mesh> m_quadMesh;
-    static std::unique_ptr<Material> m_material; // 先ほど作ったMaterialクラス！
+    static std::unique_ptr<Material> m_material;
 
     // CPU側で一時保持するパラメータ
     static DirectX::XMFLOAT4X4 m_world;

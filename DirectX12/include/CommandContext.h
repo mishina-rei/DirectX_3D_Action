@@ -33,7 +33,7 @@ public:
 	void SetVertexBuffer(UINT slot, const D3D12_VERTEX_BUFFER_VIEW& vbView);            // 頂点バッファの設定
 	void SetIndexBuffer(const D3D12_INDEX_BUFFER_VIEW& ibView);                         // インデックスバッファの設定
 
-    // ゲッター（ImGuiのバックエンドに渡す用など）
+    // ゲッター
     ID3D12GraphicsCommandList* GetCommandList() const { return commandList.Get(); }
 
 private:

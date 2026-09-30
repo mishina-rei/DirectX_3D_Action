@@ -62,7 +62,7 @@ void Model::Draw(Material& material) {
     if (currentAnimationIndex >= 0) {
         const auto& boneMatrices = animator.GetFinalBoneMatrices();
         if (!boneMatrices.empty()) {
-            // 送信直前にのみTransposeをかける（暗黙のルールをここに隠蔽）
+            // 送信直前にのみTransposeをかける
             //std::vector<DirectX::XMMATRIX> transposedBones(boneMatrices.size());
             //for (size_t i = 0; i < boneMatrices.size(); ++i) {
             //    transposedBones[i] = DirectX::XMMatrixTranspose(boneMatrices[i]);

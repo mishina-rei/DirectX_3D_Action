@@ -7,7 +7,7 @@
 inline uint64_t GenerateUUID() {
     static std::random_device rd;
     static std::mt19937_64 eng(rd());
-    // 0は「無効なID（参照なし）」、1から最大値まで
+    // 0は無効なID（参照なし）、1から最大値まで
     static std::uniform_int_distribution<uint64_t> dist(1, 0xFFFFFFFFFFFFFFFF);
     return dist(eng);
 }

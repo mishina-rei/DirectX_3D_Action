@@ -37,7 +37,6 @@ public:
 	Quaternion& operator*=(float s) { v = DirectX::XMVectorScale(v, s); return *this; }
 	Quaternion& operator/=(float s) { v = DirectX::XMVectorScale(v, 1.0f / s); return *this; }
 
-	//--- 便利関数
 	// 単位元
 	static Quaternion Identity() { return Quaternion(0.0f, 0.0f, 0.0f, 1.0f); }
 	
