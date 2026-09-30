@@ -43,10 +43,7 @@ void RenderSystem::Draw(ECS::World* world)
         cmdList->IASetPrimitiveTopology(D3D_PRIMITIVE_TOPOLOGY_TRIANGLELIST);
 
         // ワールド行列計算
-        DirectX::XMMATRIX T = DirectX::XMMatrixTranslationFromVector(transform.position);
-        DirectX::XMMATRIX R = DirectX::XMMatrixRotationQuaternion(transform.rotation);
-        DirectX::XMMATRIX S = DirectX::XMMatrixScalingFromVector(transform.scale);
-        DirectX::XMMATRIX matWorld = S * R * T;
+        DirectX::XMMATRIX matWorld = transform.GetWorldMatrix(world);
 
         // マテリアルへ定数バッファのデータを転送
         mesh.material->SetMatrix("world", matWorld);
@@ -71,10 +68,7 @@ void RenderSystem::Draw(ECS::World* world)
     world->ForEach<SpriteRenderer, Transform>([&](ECS::EntityID id, SpriteRenderer& sprite, Transform& transform) {
         if (!sprite.isVisible || !sprite.texture.asset || sprite.isUI) return;
 
-        DirectX::XMMATRIX T = DirectX::XMMatrixTranslationFromVector(transform.position);
-        DirectX::XMMATRIX R = DirectX::XMMatrixRotationQuaternion(transform.rotation);
-        DirectX::XMMATRIX S = DirectX::XMMatrixScalingFromVector(transform.scale);
-        DirectX::XMMATRIX matWorld = S * R * T;
+        DirectX::XMMATRIX matWorld = transform.GetWorldMatrix(world);
 
         DirectX::XMFLOAT4X4 worldOut;
         DirectX::XMStoreFloat4x4(&worldOut, matWorld);
@@ -134,6 +128,9 @@ void RenderSystem::Draw(ECS::World* world)
         DirectX::XMMATRIX R = DirectX::XMMatrixRotationQuaternion(transform.rotation);
         DirectX::XMMATRIX S = DirectX::XMMatrixScalingFromVector(scale);
         DirectX::XMMATRIX matWorld = S * R * T;
+        if (transform.parent.id != ECS::INVALID_ENTITY_ID && world && world->HasComponent<Transform>(transform.parent.id)) {
+            matWorld = matWorld * world->GetComponent<Transform>(transform.parent.id).GetWorldMatrix(world);
+        }
 
         DirectX::XMFLOAT4X4 worldOut;
         DirectX::XMStoreFloat4x4(&worldOut, matWorld);

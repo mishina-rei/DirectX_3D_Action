@@ -44,6 +44,8 @@ public:
                 if (ImGui::CollapsingHeader(name.c_str(), ImGuiTreeNodeFlags_DefaultOpen)) {
                     auto& comp = world->GetComponent<T>(id);
                     ImGuiArchive archive;
+                    archive.world = world;
+                    archive.currentEntityID = id;
                     comp.Reflect(archive); // UI描画アーカイバを渡す
                 }
             }

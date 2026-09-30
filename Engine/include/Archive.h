@@ -6,6 +6,9 @@
 #include "Quaternion.h"
 #include <unordered_map>
 #include "AssetRef.h"
+#include "world.h"
+#include "Name.h"
+#include "UUID.h"
 
 
 // 他のエンティティを参照するための専用の型
@@ -21,6 +24,9 @@ using json = nlohmann::json;
 // ==========================================
 class ImGuiArchive {
 public:
+    ECS::World* world = nullptr;
+    ECS::EntityID currentEntityID = ECS::INVALID_ENTITY_ID;
+
     void Property(const char* name, float& value) { ImGui::DragFloat(name, &value, 0.1f); }
     void Property(const char* name, int& value) { ImGui::DragInt(name, &value); }
     void Property(const char* name, bool& value) { ImGui::Checkbox(name, &value); }
@@ -50,8 +56,38 @@ public:
     }
 	// EntityRef用
     void Property(const char* name, EntityRef& value) {
-        // UIテキスト表示
-        ImGui::Text("%s [Target ID: %d]", name, (int)value.id);
+        std::string currentParentName = "None";
+        if (value.id != ECS::INVALID_ENTITY_ID && world && world->HasComponent<Name>(value.id)) {
+            currentParentName = world->GetComponent<Name>(value.id).name;
+        }
+
+        ImGui::PushID(name);
+        if (ImGui::BeginCombo(name, currentParentName.c_str())) {
+            // "None"（親なし）の選択肢
+            bool isNoneSelected = (value.id == ECS::INVALID_ENTITY_ID);
+            if (ImGui::Selectable("None", isNoneSelected)) {
+                value.id = ECS::INVALID_ENTITY_ID;
+                value.uuid = 0;
+            }
+
+            // シーン内の他のエンティティを一覧表示
+            if (world) {
+                world->ForEachComponent<Name>([&](ECS::EntityID entityId, Name& entityName) {
+                    if (entityId == currentEntityID) return; // 自分自身は除外
+
+                    bool isSelected = (value.id == entityId);
+                    std::string label = entityName.name + " (ID: " + std::to_string(entityId) + ")";
+                    if (ImGui::Selectable(label.c_str(), isSelected)) {
+                        value.id = entityId;
+                        if (world->HasComponent<UUIDComponent>(entityId)) {
+                            value.uuid = world->GetComponent<UUIDComponent>(entityId).id;
+                        }
+                    }
+                });
+            }
+            ImGui::EndCombo();
+        }
+        ImGui::PopID();
     }
     // AssetRef用
     template<typename T>
