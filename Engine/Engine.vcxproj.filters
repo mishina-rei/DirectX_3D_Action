@@ -37,6 +37,18 @@
     <Filter Include="ヘッダー ファイル\Json">
       <UniqueIdentifier>{85351b77-5e54-4613-8d83-b76518b14027}</UniqueIdentifier>
     </Filter>
+    <Filter Include="ヘッダー ファイル\Editor">
+      <UniqueIdentifier>{89271c9f-8362-4ea0-b03d-0af32d38903a}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="ヘッダー ファイル\Utility">
+      <UniqueIdentifier>{34b081d9-8b3e-4546-81b1-7b8b8cbeddba}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="ソース ファイル\Editor">
+      <UniqueIdentifier>{c0ebe3d9-e574-4727-ad09-e360491b8d52}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="ソース ファイル\Utility">
+      <UniqueIdentifier>{fc5c48fd-231e-4be8-9232-295baf300b07}</UniqueIdentifier>
+    </Filter>
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="src\Engine_pch.cpp">
@@ -51,16 +63,10 @@
     <ClCompile Include="src\Animator.cpp">
       <Filter>ソース ファイル</Filter>
     </ClCompile>
-    <ClCompile Include="src\EditorUI.cpp">
-      <Filter>ソース ファイル</Filter>
-    </ClCompile>
     <ClCompile Include="src\world.cpp">
       <Filter>ソース ファイル\ECS</Filter>
     </ClCompile>
     <ClCompile Include="src\Scene.cpp">
-      <Filter>ソース ファイル</Filter>
-    </ClCompile>
-    <ClCompile Include="src\Random.cpp">
       <Filter>ソース ファイル</Filter>
     </ClCompile>
     <ClCompile Include="src\PhysicsSystem.cpp">
@@ -84,13 +90,7 @@
     <ClCompile Include="src\SceneManager.cpp">
       <Filter>ソース ファイル</Filter>
     </ClCompile>
-    <ClCompile Include="..\..\..\ENDLESSSHOOT\ENDLESS-SHOOT\ENDLESS_SHOOT\src\Audio.cpp">
-      <Filter>ソース ファイル</Filter>
-    </ClCompile>
     <ClCompile Include="src\Sprite.cpp">
-      <Filter>ソース ファイル</Filter>
-    </ClCompile>
-    <ClCompile Include="src\EffekseerManager.cpp">
       <Filter>ソース ファイル</Filter>
     </ClCompile>
     <ClCompile Include="src\EngineCore.cpp">
@@ -120,8 +120,23 @@
     <ClCompile Include="src\Archetype.cpp">
       <Filter>ソース ファイル\ECS</Filter>
     </ClCompile>
+    <ClCompile Include="src\EditorUI.cpp">
+      <Filter>ソース ファイル\Editor</Filter>
+    </ClCompile>
+    <ClCompile Include="src\Random.cpp">
+      <Filter>ソース ファイル\Utility</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\..\ENDLESSSHOOT\ENDLESS-SHOOT\ENDLESS_SHOOT\src\Audio.cpp">
+      <Filter>ソース ファイル\Utility</Filter>
+    </ClCompile>
     <ClCompile Include="src\Input.cpp">
-      <Filter>ソース ファイル</Filter>
+      <Filter>ソース ファイル\Utility</Filter>
+    </ClCompile>
+    <ClCompile Include="src\EffekseerManager.cpp">
+      <Filter>ソース ファイル\Utility</Filter>
+    </ClCompile>
+    <ClCompile Include="src\AssetRef.cpp">
+      <Filter>ソース ファイル\Editor</Filter>
     </ClCompile>
   </ItemGroup>
   <ItemGroup>
@@ -138,15 +153,6 @@
       <Filter>ヘッダー ファイル</Filter>
     </ClInclude>
     <ClInclude Include="include\Animator.h">
-      <Filter>ヘッダー ファイル</Filter>
-    </ClInclude>
-    <ClInclude Include="include\EditorUI.h">
-      <Filter>ヘッダー ファイル</Filter>
-    </ClInclude>
-    <ClInclude Include="include\Quaternion.h">
-      <Filter>ヘッダー ファイル</Filter>
-    </ClInclude>
-    <ClInclude Include="include\Vector.h">
       <Filter>ヘッダー ファイル</Filter>
     </ClInclude>
     <ClInclude Include="include\ComponentTypeID.h">
@@ -188,9 +194,6 @@
     <ClInclude Include="include\RenderSystem.h">
       <Filter>ヘッダー ファイル\System</Filter>
     </ClInclude>
-    <ClInclude Include="include\Random.h">
-      <Filter>ヘッダー ファイル</Filter>
-    </ClInclude>
     <ClInclude Include="include\NativeScript.h">
       <Filter>ヘッダー ファイル\Component</Filter>
     </ClInclude>
@@ -215,12 +218,6 @@
     <ClInclude Include="include\Defines.h">
       <Filter>ヘッダー ファイル</Filter>
     </ClInclude>
-    <ClInclude Include="include\Audio.h">
-      <Filter>ヘッダー ファイル</Filter>
-    </ClInclude>
-    <ClInclude Include="include\Input.h">
-      <Filter>ヘッダー ファイル</Filter>
-    </ClInclude>
     <ClInclude Include="include\MeshRenderer.h">
       <Filter>ヘッダー ファイル\Component</Filter>
     </ClInclude>
@@ -232,9 +229,6 @@
     </ClInclude>
     <ClInclude Include="include\Collider.h">
       <Filter>ヘッダー ファイル\Component</Filter>
-    </ClInclude>
-    <ClInclude Include="include\EffekseerManager.h">
-      <Filter>ヘッダー ファイル</Filter>
     </ClInclude>
     <ClInclude Include="include\EntityID.h">
       <Filter>ヘッダー ファイル\ECS</Filter>
@@ -269,17 +263,41 @@
     <ClInclude Include="include\json.hpp">
       <Filter>ヘッダー ファイル\Json</Filter>
     </ClInclude>
-    <ClInclude Include="include\Archive.h">
-      <Filter>ヘッダー ファイル</Filter>
-    </ClInclude>
-    <ClInclude Include="include\ComponentMetaData.h">
-      <Filter>ヘッダー ファイル</Filter>
-    </ClInclude>
     <ClInclude Include="include\Name.h">
       <Filter>ヘッダー ファイル\Component</Filter>
     </ClInclude>
     <ClInclude Include="include\UUID.h">
       <Filter>ヘッダー ファイル\Component</Filter>
+    </ClInclude>
+    <ClInclude Include="include\EditorUI.h">
+      <Filter>ヘッダー ファイル\Editor</Filter>
+    </ClInclude>
+    <ClInclude Include="include\ComponentMetaData.h">
+      <Filter>ヘッダー ファイル\Editor</Filter>
+    </ClInclude>
+    <ClInclude Include="include\Vector.h">
+      <Filter>ヘッダー ファイル\Utility</Filter>
+    </ClInclude>
+    <ClInclude Include="include\Random.h">
+      <Filter>ヘッダー ファイル\Utility</Filter>
+    </ClInclude>
+    <ClInclude Include="include\Quaternion.h">
+      <Filter>ヘッダー ファイル\Utility</Filter>
+    </ClInclude>
+    <ClInclude Include="include\Audio.h">
+      <Filter>ヘッダー ファイル\Utility</Filter>
+    </ClInclude>
+    <ClInclude Include="include\Input.h">
+      <Filter>ヘッダー ファイル\Utility</Filter>
+    </ClInclude>
+    <ClInclude Include="include\Archive.h">
+      <Filter>ヘッダー ファイル\Editor</Filter>
+    </ClInclude>
+    <ClInclude Include="include\EffekseerManager.h">
+      <Filter>ヘッダー ファイル\Utility</Filter>
+    </ClInclude>
+    <ClInclude Include="include\AssetRef.h">
+      <Filter>ヘッダー ファイル\Editor</Filter>
     </ClInclude>
   </ItemGroup>
 </Project>

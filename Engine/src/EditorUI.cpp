@@ -110,7 +110,6 @@ void EditorUI::Update(ECS::World* world)
     // ロード予約が入っていたら実行する
     if (!nextScene.empty()) {
 
-        // ！！超重要！！
         // 前のフレームのGPU描画が完全に終わるのを待機する
         GraphicsCore::Get().FlushCommandQueue();
 
@@ -165,17 +164,7 @@ void EditorUI::LoadScene(ECS::World* world, const std::string& filepath)
     if (!sceneJson.contains("Entities")) return;
 
     // 現在のシーンにあるオブジェクトをすべて削除する（クリーンアップ）
-    std::vector<ECS::EntityID> entitiesToDelete;
-
-    // NameComponentを持っている全エンティティをリストアップ
-    world->ForEachComponent<Name>([&](ECS::EntityID id, Name& nameComp) {
-        entitiesToDelete.push_back(id);
-        });
-
-    // リストアップしたエンティティを削除
-    for (auto id : entitiesToDelete) {
-        world->DeleteEntity(id);
-    }
+    world->Clear();
 
     // 選択状態をリセットして安全を確保
     selectedEntityID = ECS::INVALID_ENTITY_ID;

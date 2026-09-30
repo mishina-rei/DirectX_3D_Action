@@ -22,7 +22,7 @@ void SceneTest::Init()
 
     EditorUI::Get().RegisterComponent<Name>("Name Component");
     EditorUI::Get().RegisterComponent<Transform>("Transform");
-        EditorUI::Get().RegisterComponent<UUIDComponent>("UUID");
+    EditorUI::Get().RegisterComponent<UUIDComponent>("UUID");
     EditorUI::Get().RegisterComponent<Camera>("Camera");
     EditorUI::Get().RegisterComponent<MeshRenderer>("MeshRenderer");
     EditorUI::Get().RegisterComponent<SpriteRenderer>("SpriteRenderer");

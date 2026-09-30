@@ -5,36 +5,13 @@
 #include "Vector.h" 
 #include "Quaternion.h"
 #include <unordered_map>
+#include "AssetRef.h"
+
 
 // 他のエンティティを参照するための専用の型
 struct EntityRef {
     uint64_t uuid = 0;                         // セーブ/ロード用
     ECS::EntityID id = ECS::INVALID_ENTITY_ID; // ゲーム実行用
-};
-
-// ==========================================
-// アセット読み込み用のヘルパー関数
-// ==========================================
-class Model;
-class Texture;
-
-inline void LoadAssetResource(std::shared_ptr<Model>& asset, const std::string& path);
-inline void LoadAssetResource(std::shared_ptr<Texture>& asset, const std::string& path);
-
-// アセットのファイルパスと読み込み済み実体を管理する型
-template<typename T>
-struct AssetRef {
-    std::string path = "";
-    std::shared_ptr<T> asset = nullptr;
-
-    void Load(const std::string& newPath) {
-        path = newPath;
-        LoadAssetResource(asset, path);
-    }
-
-    T* operator->() const { return asset.get(); }
-    T* get() const { return asset.get(); }
-    operator bool() const { return asset != nullptr; }
 };
 
 using json = nlohmann::json;
@@ -57,8 +34,13 @@ public:
             value = buf;
         }
     }
+
+	// Quaternion用 (オイラー角で表示)
     void Property(const char* name, Quaternion& value) {
-        ImGui::DragFloat4(name, &value.x, 0.01f);
+        Vector3 euler = value.ToEuler();
+        if (ImGui::DragFloat3(name, &euler.x, 0.5f)) {
+            value = Quaternion::FromRotation(euler.x, euler.y, euler.z);
+        }
     }
 
     // UUID用
@@ -179,7 +161,7 @@ public:
 // ==========================================
 class ResolveArchive {
 public:
-    // ロード時に作った「UUID -> 新EntityID」の対応表
+    // ロード時に作ったUUID -> 新EntityIDの対応表
     const std::unordered_map<uint64_t, ECS::EntityID>& uuidMap;
 
     ResolveArchive(const std::unordered_map<uint64_t, ECS::EntityID>& map) : uuidMap(map) {}
@@ -198,34 +180,3 @@ public:
     template<typename T>
     void Property(const char* name, T& value) {}
 };
-
-// ==========================================
-// LoadAssetResource の実体定義
-// ==========================================
-#include "Model.h"
-#include "Texture.h"
-
-inline void LoadAssetResource(std::shared_ptr<Model>& asset, const std::string& path) {
-    if (path.empty()) {
-        asset = nullptr;
-        return;
-    }
-    if (!asset) {
-        asset = std::make_shared<Model>();
-    }
-    asset->CreateFromFile(path);
-}
-
-inline void LoadAssetResource(std::shared_ptr<Texture>& asset, const std::string& path) {
-    if (path.empty()) {
-        asset = nullptr;
-        return;
-    }
-    if (!asset) {
-        asset = std::make_shared<Texture>();
-    }
-    int size = MultiByteToWideChar(CP_UTF8, 0, path.c_str(), (int)path.size(), NULL, 0);
-    std::wstring wpath(size, 0);
-    MultiByteToWideChar(CP_UTF8, 0, path.c_str(), (int)path.size(), &wpath[0], size);
-    asset->CreateFromFile(wpath);
-}

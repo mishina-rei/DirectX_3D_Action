@@ -163,6 +163,7 @@
     <ClCompile Include="..\..\..\ENDLESSSHOOT\ENDLESS-SHOOT\ENDLESS_SHOOT\src\Audio.cpp" />
     <ClCompile Include="src\Animator.cpp" />
     <ClCompile Include="src\Archetype.cpp" />
+    <ClCompile Include="src\AssetRef.cpp" />
     <ClCompile Include="src\CameraSystem.cpp" />
     <ClCompile Include="src\ColliderSystem.cpp" />
     <ClCompile Include="src\CommandBuffer.cpp" />
@@ -217,6 +218,7 @@
     <ClInclude Include="include\Animator.h" />
     <ClInclude Include="include\Archetype.h" />
     <ClInclude Include="include\Archive.h" />
+    <ClInclude Include="include\AssetRef.h" />
     <ClInclude Include="include\Audio.h" />
     <ClInclude Include="include\Camera.h" />
     <ClInclude Include="include\CameraSystem.h" />

@@ -59,6 +59,9 @@ namespace ECS
         // エンティティを削除
         void DeleteEntity(EntityID id);
 
+        // すべてのエンティティを削除
+        void Clear();
+
         // コンポーネント追加
         template <typename T>
         void AddComponent(EntityID id, T data) 

@@ -48,6 +48,24 @@ void ECS::World::DeleteEntity(EntityID id)
     entityIdGen.Release(id);
 }
 
+void ECS::World::Clear()
+{
+    // 全エンティティIDを収集
+    std::vector<EntityID> allEntities;
+    allEntities.reserve(entityIndex.size());
+    for (const auto& pair : entityIndex) {
+        allEntities.push_back(pair.first);
+    }
+
+    // 順次破棄
+    for (EntityID id : allEntities) {
+        DeleteEntity(id);
+    }
+
+    // ID生成器をリセット
+    entityIdGen.Reset();
+}
+
 std::shared_ptr<ECS::Archetype> ECS::World::GetOrCreateArchetype(const Signature& sig) 
 {
     if (archetypeMap.find(sig) != archetypeMap.end()) {
