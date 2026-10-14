@@ -24,9 +24,6 @@ static const float fFPS = static_cast<float>(FPS);
 #define CMSEC(value) MSEC(CMETER(value))
 static const float GRAVITY = 0.98f;
 
-// タイトル
-//static const char* APP_TITLE = "ENDLESS_SHOOT";
-
 // 画面サイズ
 static const int SCREEN_WIDTH	= 1920;
 static const int SCREEN_HEIGHT	= 1080;

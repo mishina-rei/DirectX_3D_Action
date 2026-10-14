@@ -9,6 +9,7 @@
 #include "world.h"
 #include "Name.h"
 #include "UUID.h"
+#include "Collider.h"
 
 
 // 他のエンティティを参照するための専用の型
@@ -53,6 +54,24 @@ public:
     void Property(const char* name, uint64_t& value) {
         // 値はいじれないようにTextで表示するだけ
         ImGui::Text("%s: %llu", name, (unsigned long long)value);
+    }
+
+    // CollisionTag用
+    void Property(const char* name, CollisionTag& value) {
+        static const char* tagNames[] = {
+            "Default",
+            "NONE",
+            "PLAYER",
+            "ENEMY",
+            "BULLET"
+        };
+        int current = static_cast<int>(value);
+        if (current < 0 || current >= (int)CollisionTag::COLLISION_TAG_MAX) {
+            current = 0;
+        }
+        if (ImGui::Combo(name, &current, tagNames, IM_ARRAYSIZE(tagNames))) {
+            value = static_cast<CollisionTag>(current);
+        }
     }
 	// EntityRef用
     void Property(const char* name, EntityRef& value) {
@@ -129,6 +148,10 @@ public:
     void Property(const char* name, EntityRef& value) {
         j[name] = value.uuid; // 保存するのは絶対変わらないUUIDのみ
     }
+    // CollisionTag用
+    void Property(const char* name, CollisionTag& value) {
+        j[name] = static_cast<int>(value);
+    }
     // AssetRef用
     template<typename T>
     void Property(const char* name, AssetRef<T>& value) {
@@ -180,6 +203,12 @@ public:
         if (j.contains(name)) {
             value.uuid = j[name].get<uint64_t>();
             value.id = ECS::INVALID_ENTITY_ID; // 読み込み直後は新しいIDが不明なので無効化
+        }
+    }
+    // CollisionTag用
+    void Property(const char* name, CollisionTag& value) {
+        if (j.contains(name)) {
+            value = static_cast<CollisionTag>(j[name].get<int>());
         }
     }
     // AssetRef用

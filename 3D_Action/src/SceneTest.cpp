@@ -1,4 +1,4 @@
-﻿#include "Engine_pch.h"
+#include "Engine_pch.h"
 #include "SceneTest.h"
 #include "Transform.h"
 #include "Camera.h"
@@ -8,6 +8,8 @@
 #include "Input.h"
 #include "Name.h"
 #include "UUID.h"
+#include "Collider.h"
+#include "Rigidbody.h"
 
 void SceneTest::Init()
 {
@@ -16,6 +18,8 @@ void SceneTest::Init()
     RegisterStructural<MeshRenderer>();
     RegisterStructural<SpriteRenderer>();
     RegisterStructural<UUIDComponent>();
+    RegisterStructural<BoxCollider>();
+    RegisterStructural<Rigidbody>();
 
     ShaderManager::Get().LoadShader("VS_Standard", L"src\\Shader\\StandardVS.hlsl", L"main", L"vs_6_0");
     ShaderManager::Get().LoadShader("PS_Standard", L"src\\Shader\\StandardPS.hlsl", L"main", L"ps_6_0");
@@ -26,6 +30,8 @@ void SceneTest::Init()
     EditorUI::Get().RegisterComponent<Camera>("Camera");
     EditorUI::Get().RegisterComponent<MeshRenderer>("MeshRenderer");
     EditorUI::Get().RegisterComponent<SpriteRenderer>("SpriteRenderer");
+    EditorUI::Get().RegisterComponent<BoxCollider>("BoxCollider");
+    EditorUI::Get().RegisterComponent<Rigidbody>("Rigidbody");
 
     // カメラの作成
     auto camera = CreateEntity();

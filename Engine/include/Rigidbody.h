@@ -9,4 +9,14 @@ struct Rigidbody
     float drag = 0.0f;                           // 空気抵抗 (0.0 ~ 1.0)
     bool useGravity = true;                      // 重力の影響を受けるか
     bool isKinematic = false;                    // 物理演算の影響を受けないか（trueならスクリプト等で動かす）
+
+    template<class Archive>
+    void Reflect(Archive& archive) {
+        archive.Property("Mass", mass);
+        archive.Property("Drag", drag);
+        archive.Property("UseGravity", useGravity);
+        archive.Property("IsKinematic", isKinematic);
+        archive.Property("Velocity", velocity);
+        archive.Property("Acceleration", acceleration);
+    }
 };

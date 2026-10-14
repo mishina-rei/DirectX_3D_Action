@@ -34,6 +34,16 @@ struct BoxCollider
     {
     }
 
+    template<class Archive>
+    void Reflect(Archive& archive) {
+        archive.Property("Center", center);
+        archive.Property("Size", size);
+        archive.Property("Rotation", rotation);
+        archive.Property("IsTrigger", isTrigger);
+        archive.Property("IsStatic", isStatic);
+        archive.Property("Tag", tag);
+    }
+
     void Rotate(Quaternion q)
 	{
 		rotation *= q;
