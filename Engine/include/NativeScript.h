@@ -12,6 +12,10 @@
 #include <functional>
 #include "SceneManager.h"
 
+class JsonWriteArchive;
+class JsonReadArchive;
+class ImGuiArchive;
+
  // ユーザー定義スクリプトの基底クラス
 class NativeScript
 {
@@ -22,6 +26,23 @@ protected:
 
 public:
 	virtual ~NativeScript() = default;
+
+	// JSON形式でスクリプトの設定を保存・読み込みするための関数
+	// 
+	// 例　↓
+	// 
+	//void SaveSettings(JsonWriteArchive& archive) override
+	//{
+	//	archive.Property("MoveSpeed", moveSpeed);
+	//}
+
+	//void LoadSettings(JsonReadArchive& archive) override
+	//{
+	//	archive.Property("MoveSpeed", moveSpeed);
+	//}
+	virtual void SaveSettings(JsonWriteArchive& archive) {}
+	virtual void LoadSettings(JsonReadArchive& archive) {}
+	virtual void DrawSettings(ImGuiArchive& archive) {}
 
 	// システムが呼ぶ初期化関数
 	void Init(ECS::World* _world, ECS::EntityID _id)
@@ -34,11 +55,25 @@ public:
 
 	bool IsInitialized() const { return isInitialized; }
 
+	void Destroy()	// エンティティが破棄されるときに呼ばれる
+	{
+		if (!isInitialized)
+		{
+			return;
+		}
+
+		isInitialized = false;
+		OnDestroy();
+
+		world = nullptr;
+		entityId = ECS::INVALID_ENTITY_ID;
+	}
+
 	// ユーザーがオーバーライドする関数
-	virtual void OnCreate() {}
-	virtual void Update() {}
-	virtual void LateUpdate() {}
-	virtual void OnDestroy() {}
+	virtual void OnCreate() {}	// エンティティが生成されたときに呼ばれる
+	virtual void Update() {}	// 毎フレーム呼ばれる
+	virtual void LateUpdate() {}// 毎フレーム呼ばれる（Updateの後）
+	virtual void OnDestroy() {}	// エンティティが破棄されるときに呼ばれる
 
 	// 当たり判定イベント
 	virtual void OnCollisionEnter(ECS::EntityID other) {}

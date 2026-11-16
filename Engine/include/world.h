@@ -6,6 +6,7 @@
 #include <map>
 #include <set>
 #include <tuple>
+#include <vector>
 #include "Archetype.h"
 #include "SparsePool.h"
 #include "IDGenerator.h"
@@ -46,6 +47,9 @@ namespace ECS
     public:
 
         World();
+
+		// すべてのエンティティIDを取得
+        std::vector<EntityID> GetEntityIds() const;
 
         // アーキタイプに格納するコンポーネントを登録
         template <typename T>

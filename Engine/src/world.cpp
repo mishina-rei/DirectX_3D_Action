@@ -1,5 +1,7 @@
 #include "Engine_pch.h"
 #include "world.h"
+#include "Script.h"
+#include <algorithm>
 
 ECS::World::World() 
 {
@@ -7,6 +9,21 @@ ECS::World::World()
     Signature emptySig;
     emptyArchetype = std::make_shared<Archetype>(emptySig);
     archetypeMap[emptySig] = emptyArchetype;
+}
+
+std::vector<ECS::EntityID> ECS::World::GetEntityIds() const
+{
+    std::vector<EntityID> entityIds;
+    entityIds.reserve(entityIndex.size());
+
+    for (const auto& entry : entityIndex)
+    {
+        entityIds.push_back(entry.first);
+    }
+
+    std::sort(entityIds.begin(), entityIds.end());
+
+    return entityIds;
 }
 
 ECS::EntityID ECS::World::CreateEntity() 
@@ -22,6 +39,22 @@ void ECS::World::DeleteEntity(EntityID id)
     // 存在確認
     if (entityIndex.find(id) == entityIndex.end())
         return;
+
+    if (HasComponent<Script>(id))
+    {
+        auto script = GetComponent<Script>(id).script;
+
+        if (script)
+        {
+			script->Destroy();  // スクリプトの破棄処理を呼ぶ
+        }
+    }
+
+    // コールバック内ですでに削除された場合は終了する。
+    if (entityIndex.find(id) == entityIndex.end())
+    {
+        return;
+    }
 
     EntityRecord& record = entityIndex[id];
     auto arch = record.archetype;

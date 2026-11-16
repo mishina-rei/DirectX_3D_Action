@@ -2,7 +2,6 @@
 
 #include "SceneManager.h"
 #include "EffekseerManager.h"
-#include "Input.h"
 
 SceneManager::SceneManager()
 {
@@ -10,7 +9,6 @@ SceneManager::SceneManager()
 
 void SceneManager::Update()
 {
-	UpdateInput();
 	ChangeScene();
 	currentScene->Update();
 	currentScene->ExecuteCommands(); // 遅延させていたWorldへの変更を適用

@@ -4,7 +4,7 @@
 #include "CommandBuffer.h"
 #include "ScriptSystem.h"
 
-void CommandBuffer::Execute(ECS::World& world)
+void CommandBuffer::Execute(ECS::World& world,bool canInitializeScripts)
 {
 	int count = 0;	// 無限ループ防止用カウンタ
 	while(true)
@@ -20,7 +20,10 @@ void CommandBuffer::Execute(ECS::World& world)
 			cmd(world);
 		}
 
-		ScriptSystem::Init(&world);
+		if (canInitializeScripts)
+		{
+			ScriptSystem::Init(&world);
+		}
 
 		if (commands.empty() || 20 < count)
 			return;

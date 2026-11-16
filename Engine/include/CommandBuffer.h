@@ -10,11 +10,16 @@ class CommandBuffer
 	std::vector<std::function<void(ECS::World&)>> commands;
 
 public:
+	void Clear()	// コマンドをクリアする
+	{
+		commands.clear();	
+	}
+
 	// コマンド（ラムダ式など）を積む
 	void Push(std::function<void(ECS::World&)> cmd) {
 		commands.push_back(cmd);
 	}
 
 	// 溜まったコマンドをすべて実行する
-	void Execute(ECS::World& world);
+	void Execute(ECS::World& world,bool canInitializeScripts = false);
 };

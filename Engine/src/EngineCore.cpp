@@ -5,6 +5,7 @@
 
 #include "Sprite.h"
 #include "Input.h"
+#include "EngineTime.h"
 #include "Audio.h"
 #include "EffekseerManager.h"
 #include "RenderSystem.h"
@@ -72,6 +73,7 @@ void EngineCore::MainLoop()
     MSG message = {};
     timeBeginPeriod(1);
     DWORD preExecTime = timeGetTime();
+    Time::Reset();
 
     while (true)
     {
@@ -86,12 +88,21 @@ void EngineCore::MainLoop()
             DWORD nowTime = timeGetTime();
             if (static_cast<float>(nowTime - preExecTime) >= 1000.0f / 60.0f)
             {
-                UpdateInput();
+                Time::Update();
+                UpdateInput(EditorUI::Get().IsPlaying());
 
                 EditorUI::Get().Update(SceneManager::GetInstance().GetCurrentScene()->GetWorld());
 
-                SceneManager::GetInstance().Update();
-                EffekseerManager::Update();
+				if (EditorUI::Get().IsPlaying())    // エディタの状態が再生中の場合は、シーンの更新を行う
+                {
+                    SceneManager::GetInstance().Update();
+                    EffekseerManager::Update();
+                }
+                else
+                {
+                    auto* scene = SceneManager::GetInstance().GetCurrentScene();
+                    scene->ExecuteCommands();
+                }
 
                 // DX12のフレーム制御を組み込む
                 GraphicsCore::Get().BeginFrame();

@@ -11,7 +11,7 @@ constexpr int ITER_NUM = 4;                 // 反復処理の回数(処理重�
 constexpr float PENETRATION_SLOP = 0.01f;   // 震えるのをふせぐめり込み許容値
 
 ColliderSystem::ColliderSystem():
-	m_prevCollisions(),
+	prevCollisions(),
     tagMap{ true, true, true, true, true,
             true, true, true, true, true,
             true, true, true, true, true,
@@ -20,6 +20,11 @@ ColliderSystem::ColliderSystem():
 {
 	SetTagMap(CollisionTag::PLAYER, CollisionTag::BULLET, false);
 	SetTagMap(CollisionTag::BULLET, CollisionTag::BULLET, false);
+}
+
+void ColliderSystem::ClearContactHistory()
+{
+    prevCollisions.clear();
 }
 
 void ColliderSystem::Check(ECS::World* world)
@@ -136,7 +141,7 @@ void ColliderSystem::Check(ECS::World* world)
     // イベントの発火 (Enter, Stay)
     for (auto& pair : currentCollisions)
     {
-        bool isStay = (m_prevCollisions.find(pair) != m_prevCollisions.end());
+        bool isStay = (prevCollisions.find(pair) != prevCollisions.end());
 
         // pair.first のスクリプト呼び出し
         if (world->HasComponent<Script>(pair.first)) {
@@ -157,7 +162,7 @@ void ColliderSystem::Check(ECS::World* world)
     }
 
     // イベントの発火 (Exit)
-    for (auto& pair : m_prevCollisions)
+    for (auto& pair : prevCollisions)
     {
         if (currentCollisions.find(pair) == currentCollisions.end())
         {
@@ -173,7 +178,7 @@ void ColliderSystem::Check(ECS::World* world)
             }
         }
     }
-    m_prevCollisions = currentCollisions;
+    prevCollisions = currentCollisions;
 }
 
 bool ColliderSystem::Raycast(ECS::World* world, const Ray& ray, RaycastHit* outHit, float maxDistance, ECS::EntityID ignoreEntity)

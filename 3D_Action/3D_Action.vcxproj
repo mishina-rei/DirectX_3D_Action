@@ -173,6 +173,7 @@ exit 0</Command>
   <ItemGroup>
     <ClCompile Include="src\main.cpp" />
     <ClCompile Include="src\SceneTest.cpp" />
+    <ClCompile Include="src\MoveTestScript.cpp" />
   </ItemGroup>
   <ItemGroup>
     <FxCompile Include="src\Shader\SpritePS.hlsl">
@@ -207,6 +208,7 @@ exit 0</Command>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="src\SceneTest.h" />
+    <ClInclude Include="src\MoveTestScript.h" />
   </ItemGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />
   <ImportGroup Label="ExtensionTargets">

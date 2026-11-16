@@ -21,7 +21,7 @@ HRESULT InitInput(HWND hWnd)
 void UninitInput()
 {
 }
-void UpdateInput()
+void UpdateInput(bool canLockMouse)
 {
 	// 古いキーボードの状態を更新
 	memcpy_s(g_oldTable, sizeof(g_oldTable), g_keyTable, sizeof(g_keyTable));
@@ -29,10 +29,10 @@ void UpdateInput()
 	GetKeyboardState(g_keyTable);
 
 	// マウスロックの切り替え
-	if (IsKeyTrigger(VK_ESCAPE)) {
+	if (!canLockMouse || IsKeyTrigger(VK_ESCAPE)) {
 		SetMouseLock(false);
 	}
-	if (IsKeyTrigger(VK_LBUTTON)) {
+	else if (IsKeyTrigger(VK_LBUTTON)) {
 		// ImGuiが初期化されていて、かつUI上にマウスカーソルがない時だけロックする
 		if (ImGui::GetCurrentContext() != nullptr && !ImGui::GetIO().WantCaptureMouse) {
 			SetMouseLock(true);

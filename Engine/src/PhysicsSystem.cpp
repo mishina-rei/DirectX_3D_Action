@@ -2,29 +2,43 @@
 #include "PhysicsSystem.h"
 #include "Rigidbody.h"
 #include "Transform.h"
-#include "Defines.h"
+#include <cmath>
 
-void PhysicsSystem::Update(ECS::World* world)
+namespace
 {
-    Vector3 gravity = { 0.0f, -0.016f, 0.0f }; // 重力加速度
+    // 1単位を1mとした重力加速度
+    constexpr float GRAVITY_ACCELERATION = -9.8f;
+}
 
-    world->ForEach<Rigidbody, Transform>([&](ECS::EntityID id, Rigidbody& rb, Transform& trans) {
-        if (rb.isKinematic) return;
+void PhysicsSystem::Update(ECS::World* world, float deltaTime)
+{
+    if (deltaTime <= 0.0f)
+    {
+        return;
+    }
 
-        // 重力の適用
-        if (rb.useGravity) {
-            rb.velocity += gravity;
-        }
+    world->ForEach<Rigidbody, Transform>(
+        [&](ECS::EntityID id, Rigidbody& rb, Transform& trans)
+        {
+            if (rb.isKinematic)
+            {
+                return;
+            }
 
-        // 加速度の適用
-        rb.velocity += rb.acceleration;
+			Vector3 acceleration = rb.acceleration; // 外部からの加速度を取得
 
-        // 空気抵抗の適用
-        if (rb.drag > 0.0f) {
-            rb.velocity *= (1.0f - rb.drag);
-        }
+            if (rb.useGravity)
+            {
+				acceleration.y += GRAVITY_ACCELERATION; // 重力加速度を加算
+            }
 
-        // 速度による位置更新
-        trans.position += rb.velocity;
-    });
+			rb.velocity += acceleration * deltaTime;    // 速度を更新
+
+            if (rb.drag > 0.0f)
+            {
+				rb.velocity *= std::exp(-rb.drag * deltaTime);  // ドラッグによる減速を適用
+            }
+
+			trans.position += rb.velocity * deltaTime;  // 位置を更新
+        });
 }

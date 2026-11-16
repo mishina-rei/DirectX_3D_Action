@@ -7,7 +7,7 @@
 
 HRESULT InitInput(HWND hWnd);
 void UninitInput();
-void UpdateInput();
+void UpdateInput(bool canLockMouse = true);
 
 bool IsKeyPress(BYTE key);
 bool IsKeyTrigger(BYTE key);

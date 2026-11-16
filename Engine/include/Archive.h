@@ -168,6 +168,14 @@ private:
 public:
     JsonReadArchive(const json& parsedJson) : j(parsedJson) {}
 
+	void Property(const char* name, json& value)    // Scriptの設定用にjson型を直接読み込むためのオーバーロード
+    {
+        if (j.contains(name))
+        {
+            value = j[name];
+        }
+    }
+
     void Property(const char* name, float& value) { if (j.contains(name)) value = j[name].get<float>(); }
     void Property(const char* name, int& value) { if (j.contains(name)) value = j[name].get<int>(); }
     void Property(const char* name, bool& value) { if (j.contains(name)) value = j[name].get<bool>(); }

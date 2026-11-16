@@ -86,6 +86,14 @@ void EffekseerManager::ClearCache()
 	effects.clear();
 }
 
+void EffekseerManager::StopAll()
+{
+    if (manager.Get())
+    {
+        manager->StopAllEffects();
+    }
+}
+
 void EffekseerManager::Update()
 {
 	if (manager.Get())

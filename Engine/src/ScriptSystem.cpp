@@ -21,7 +21,11 @@ void ScriptSystem::Update(ECS::World* world)
 {
 	// ScriptComponentを持つすべてのエンティティを走査
 	world->ForEachComponent<Script>([world](ECS::EntityID id, Script& scriptComp) {
-		if (!scriptComp.script) return;
+		if (!scriptComp.script ||
+			!scriptComp.script->IsInitialized())
+		{
+			return;
+		}
 		
 		// 更新処理
 		scriptComp.script->Update();
@@ -32,7 +36,11 @@ void ScriptSystem::LateUpdate(ECS::World* world)
 {
 	// ScriptComponentを持つすべてのエンティティを走査
 	world->ForEachComponent<Script>([world](ECS::EntityID id, Script& scriptComp) {
-		if (!scriptComp.script) return;
+		if (!scriptComp.script ||
+			!scriptComp.script->IsInitialized())
+		{
+			return;
+		}
 
 		// 更新処理
 		scriptComp.script->LateUpdate();

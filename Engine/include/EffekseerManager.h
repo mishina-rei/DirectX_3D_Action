@@ -13,6 +13,7 @@ public:
     static void Update();
     static void Draw();
     static void ClearCache();
+    static void StopAll();
 
     static Effekseer::Handle Play(const char* name, Vector3 position);
     static void Stop(Effekseer::Handle handle);

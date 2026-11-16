@@ -42,6 +42,11 @@ public:
 	void Check(ECS::World* world);
 
 	/**
+	 * @brief 判定の履歴をクリアする
+	 */
+	void ClearContactHistory();
+
+	/**
 	 * @brief 全ての当たり判定コンポーネントとレイが当たってるかチェック
 	 * @param world ECSのワールド
 	 * @param ray チェックするレイ
@@ -106,7 +111,7 @@ public:
 	Vector3 Cross(Vector3 v, Vector3 other);
 
 private:
-	std::set<std::pair<ECS::EntityID, ECS::EntityID>> m_prevCollisions;
+	std::set<std::pair<ECS::EntityID, ECS::EntityID>> prevCollisions;
 
 	bool tagMap[static_cast<int>(CollisionTag::COLLISION_TAG_MAX)][static_cast<int>(CollisionTag::COLLISION_TAG_MAX)];
 

@@ -1,18 +1,33 @@
-﻿#include "Engine_pch.h"
+#include "Engine_pch.h"
 
 #include "EditorUI.h"
 #include "GraphicsCore.h"
 #include <stdexcept>
+#include <algorithm>
 #include "Name.h" 
 
 #include <fstream>
+#include <utility>
 #include <iomanip> // 綺麗に改行してJSONを保存するため
 #include "UUID.h"
 #include "MeshRenderer.h"
 #include "SpriteRenderer.h"
+#include "Camera.h"
+#include "CameraSystem.h"
+#include "SceneManager.h"
+#include "ColliderSystem.h"
+#include "Script.h"
+#include "EngineTime.h"
+#include "Input.h"
+#include "EffekseerManager.h"
 
 
 void EditorUI::Initialize(HWND hwnd) {
+    editorState = EditorState::Edit;
+    pendingDeleteEntity = ECS::INVALID_ENTITY_ID;
+    pendingAction = EditorAction::None;
+    editSceneSnapshot = json();
+    playbackError.clear();
     IMGUI_CHECKVERSION();
     ImGui::CreateContext();
     ImGuiIO& io = ImGui::GetIO(); (void)io;
@@ -72,18 +87,77 @@ void EditorUI::RenderUI(ECS::World* world)
     // エディタのメインメニューバーを描画
     if (ImGui::BeginMainMenuBar()) {
         if (ImGui::BeginMenu("File")) {
+            const bool canEditScene = editorState == EditorState::Edit;
 
             // Save ボタン
-            if (ImGui::MenuItem("Save Scene")) {
+            if (ImGui::MenuItem("Save Scene", nullptr, false, canEditScene)) {
                 // プロジェクトフォルダのルートに scene.json として保存
                 SaveScene(world, "Assets\\scene\\scene.json");
             }
 
-            if (ImGui::MenuItem("Load Scene")) {
+            if (ImGui::MenuItem("Load Scene", nullptr, false, canEditScene)) {
                 nextScene = "Assets\\scene\\scene.json";
             }
 
             ImGui::EndMenu();
+        }
+        ImGui::Separator();
+
+		switch (editorState)    // エディタの状態に応じてボタンを切り替える
+        {
+        case EditorState::Edit:
+            if (ImGui::Button("Play"))
+            {
+                pendingAction = EditorAction::Play;
+            }
+            break;
+
+        case EditorState::Playing:
+            if (ImGui::Button("Pause"))
+            {
+                editorState = EditorState::Paused;
+            }
+            break;
+
+        case EditorState::Paused:
+            if (ImGui::Button("Resume"))
+            {
+                editorState = EditorState::Playing;
+            }
+            break;
+        }
+
+        if (editorState != EditorState::Edit)
+        {
+            ImGui::SameLine();
+
+            if (ImGui::Button("Stop"))
+            {
+                pendingAction = EditorAction::Stop;
+            }
+        }
+
+        ImGui::SameLine();
+
+		// エディタの状態を表示
+        const char* stateName = "Edit";
+
+        if (editorState == EditorState::Playing)
+        {
+            stateName = "Playing";
+        }
+        else if (editorState == EditorState::Paused)
+        {
+            stateName = "Paused";
+        }
+
+        ImGui::TextUnformatted(stateName);
+
+		// エラーがあれば表示する
+        if (!playbackError.empty())
+        {
+            ImGui::SameLine();
+            ImGui::TextUnformatted(playbackError.c_str());
         }
         ImGui::EndMainMenuBar();
     }
@@ -109,9 +183,7 @@ void EditorUI::Update(ECS::World* world)
 {
     // ロード予約が入っていたら実行する
     if (!nextScene.empty()) {
-
-        // 前のフレームのGPU描画が完全に終わるのを待機する
-        GraphicsCore::Get().FlushCommandQueue();
+        pendingDeleteEntity = ECS::INVALID_ENTITY_ID;
 
         // 実際にシーンを破棄して読み込む
         LoadScene(world, nextScene);
@@ -119,64 +191,226 @@ void EditorUI::Update(ECS::World* world)
         // 予約フラグをクリア
         nextScene.clear();
     }
+    else if (pendingDeleteEntity != ECS::INVALID_ENTITY_ID)
+    {
+        const ECS::EntityID id = pendingDeleteEntity;
+        pendingDeleteEntity = ECS::INVALID_ENTITY_ID;
+
+        if (editorState == EditorState::Edit)
+        {
+			DeleteEditorEntity(world, id);  // エディタ上でエンティティを削除する
+        }
+    }
+
+    const EditorAction action = pendingAction;
+    pendingAction = EditorAction::None;
+
+	// 再生・停止の予約アクションがあれば実行する
+    switch (action)
+    {
+    case EditorAction::Play:
+        StartPlay(world);
+        break;
+
+    case EditorAction::Stop:
+        StopPlay(world);
+        break;
+
+    case EditorAction::None:
+        break;
+    }
+}
+
+void EditorUI::StartPlay(ECS::World* world)
+{
+    if (editorState != EditorState::Edit)
+    {
+        return;
+    }
+
+	playbackError.clear();  // エラーをクリア
+
+    bool canStartPlay = true;
+
+    world->ForEachComponent<Script>(
+        [&](ECS::EntityID id, Script& script)
+        {
+			if (script.HasUnavailableType())    // 型名が存在しない場合は再生できない
+            {
+                canStartPlay = false;
+            }
+        });
+
+    if (!canStartPlay)
+    {
+        playbackError = "Cannot play: a script is unavailable.";    // エラー登録
+        return;
+    }
+
+	editSceneSnapshot = CaptureScene(world);    // 現在のシーンをメモリに保存
+    editTimeScale = Time::GetTimeScale();
+
+    editorState = EditorState::Playing;
+}
+
+void EditorUI::StopPlay(ECS::World* world)
+{
+    if (editorState == EditorState::Edit)
+    {
+        return;
+    }
+
+    editorState = EditorState::Paused;
+    SetMouseLock(false);
+
+    if (!RestoreScene(world, editSceneSnapshot))
+    {
+		playbackError = "Failed to restore the edit scene.";    // エラー登録
+        return;
+    }
+
+	EffekseerManager::StopAll();        // 再生中のエフェクトをすべて停止
+	Time::SetTimeScale(editTimeScale);  // 時間のスケールを元に戻す
+
+	editSceneSnapshot = json(); // メモリに保存していたシーンデータをクリア
+    playbackError.clear();
+    editorState = EditorState::Edit;
+}
+
+json EditorUI::CaptureScene(ECS::World* world) const
+{
+    json sceneJson;
+    sceneJson["Entities"] = json::array();
+
+	// メインカメラのUUIDを保存する
+    uint64_t mainCameraUuid = 0;
+    const ECS::EntityID cameraId = CameraSystem::GetCamera();
+
+    if (world->HasComponent<Camera>(cameraId) &&
+        world->HasComponent<UUIDComponent>(cameraId))
+    {
+        mainCameraUuid = world->GetComponent<UUIDComponent>(cameraId).id;
+    }
+
+    sceneJson["MainCameraUUID"] = mainCameraUuid;
+
+	// すべてのエンティティを走査してJSONに保存する
+    for (ECS::EntityID id : world->GetEntityIds())
+    {
+        json entityJson;
+        entityJson["EntityID"] = static_cast<uint32_t>(id);
+        entityJson["Components"] = json::object();
+
+        for (const auto& info : componentRegistry)
+        {
+            info.serialize(world, id, entityJson);
+        }
+
+        sceneJson["Entities"].push_back(std::move(entityJson));
+    }
+
+    return sceneJson;
 }
 
 void EditorUI::SaveScene(ECS::World* world, const std::string& filepath)
 {
-    json sceneJson;
-    sceneJson["Entities"] = json::array(); // エンティティの配列を作成
+    const json sceneJson = CaptureScene(world);
 
-    // NameComponent を持つ全エンティティを保存対象としてループ
-    world->ForEachComponent<Name>([&](ECS::EntityID id, Name& nameComp) {
-
-        json entityJson;
-        entityJson["EntityID"] = static_cast<uint32_t>(id);
-
-        // 登録されている全コンポーネントの serialize を順番に呼ぶ
-        for (auto& info : componentRegistry) {
-            info.serialize(world, id, entityJson);
-        }
-
-        // 配列に追加
-        sceneJson["Entities"].push_back(entityJson);
-        });
-
-    // ファイルに書き出し (dump(4) でインデントを4マスにして見やすくする)
     std::ofstream file(filepath);
-    if (file.is_open()) {
+    if (file.is_open())
+    {
         file << sceneJson.dump(4);
-        file.close();
     }
 }
 
 void EditorUI::LoadScene(ECS::World* world, const std::string& filepath)
 {
     std::ifstream file(filepath);
-    if (!file.is_open()) {
-        // ファイルが無ければ何もしない
+    if (!file.is_open())
+    {
+        OutputDebugStringA("Failed to open scene file.\n");
         return;
     }
 
-    json sceneJson;
-    file >> sceneJson;
-    file.close();
+    const json sceneJson = json::parse(file, nullptr, false);
 
-    if (!sceneJson.contains("Entities")) return;
+    if (!RestoreScene(world, sceneJson))
+    {
+        OutputDebugStringA("Invalid scene data.\n");
+    }
+}
 
-    // 現在のシーンにあるオブジェクトをすべて削除する（クリーンアップ）
-    world->Clear();
+bool EditorUI::RestoreScene(ECS::World* world, const json& sceneJson)
+{
+    // Jsonの構造を確認する
+    if (!sceneJson.is_object() ||
+        !sceneJson.contains("Entities") ||
+        !sceneJson["Entities"].is_array())
+    {
+		return false;
+    }
 
-    // 選択状態をリセットして安全を確保
+    const bool hasMainCameraUuid = sceneJson.contains("MainCameraUUID");
+    uint64_t mainCameraUuid = 0;
+
+    if (hasMainCameraUuid)
+    {
+        if (!sceneJson["MainCameraUUID"].is_number_unsigned())
+        {
+            return false;
+        }
+
+        mainCameraUuid = sceneJson["MainCameraUUID"].get<uint64_t>();
+    }
+
+    const auto& entities = sceneJson["Entities"];
+
+    for (const auto& entityJson : entities)
+    {
+        if (!entityJson.is_object() ||
+            !entityJson.contains("Components") ||
+            !entityJson["Components"].is_object())
+        {
+            return false;
+        }
+    }
+
+    auto& gfx = GraphicsCore::Get();
+    gfx.FlushCommandQueue();
+
+    // 構造が確認出来たら今あるシーンを消す
     selectedEntityID = ECS::INVALID_ENTITY_ID;
+    pendingDeleteEntity = ECS::INVALID_ENTITY_ID;
+    CameraSystem::SetCamera(ECS::INVALID_ENTITY_ID);
 
-        auto& gfx = GraphicsCore::Get();
+    auto* scene = SceneManager::GetInstance().GetCurrentScene();
+
+    CommandBuffer* sceneCommands = nullptr;
+
+    if (scene && scene->GetWorld() == world)
+    {
+        sceneCommands = scene->GetCommandBuffer();
+		sceneCommands->Clear(); // 既存のコマンドをクリア
+    }
+
+	world->Clear();             // すべてのエンティティを削除
+	ColliderSystem::Instance().ClearContactHistory();   // 当たり判定の履歴もクリア
+
+    if (sceneCommands)
+    {
+		sceneCommands->Clear(); // シーンを破棄した時にためられたコマンドもクリア
+    }
+
     auto ictx = gfx.GetCommandContext();
     ictx.BeginFrame(gfx.GetCurrentCommandAllocator());
 
-    // JSONからエンティティを復元する
-    for (const auto& entityJson : sceneJson["Entities"]) {
-        ECS::EntityID newId = world->CreateEntity();
-        for (auto& info : componentRegistry) {
+    // エンティティを復元する
+    for (const auto& entityJson : entities)
+    {
+        const ECS::EntityID newId = world->CreateEntity();
+
+        for (const auto& info : componentRegistry)
+        {
             info.deserialize(world, newId, entityJson);
         }
     }
@@ -184,39 +418,134 @@ void EditorUI::LoadScene(ECS::World* world, const std::string& filepath)
     ictx.EndFrame();
     gfx.FlushCommandQueue();
 
-    // アップロードバッファの解放
-    world->ForEachComponent<MeshRenderer>([](ECS::EntityID id, MeshRenderer& mr) {
-        if (mr.model.asset) mr.model.asset->FreeUploadBuffers();
-    });
-    world->ForEachComponent<SpriteRenderer>([](ECS::EntityID id, SpriteRenderer& sr) {
-        if (sr.texture.asset) sr.texture.asset->FreeUploadBuffer();
-    });
+    // モデルとテクスチャの中間バッファを解放
+    world->ForEachComponent<MeshRenderer>(
+        [](ECS::EntityID id, MeshRenderer& mesh)
+        {
+            if (mesh.model.asset)
+            {
+                mesh.model.asset->FreeUploadBuffers();
+            }
+        });
+    world->ForEachComponent<SpriteRenderer>(
+        [](ECS::EntityID id, SpriteRenderer& sprite)
+        {
+            if (sprite.texture.asset)
+            {
+                sprite.texture.asset->FreeUploadBuffer();
+            }
+        });
 
-    // UUID から 実際の新しい EntityID を見つけるための辞書
+    // UUIDの対応表を復元する
     std::unordered_map<uint64_t, ECS::EntityID> uuidToEntityMap;
 
-    // 現在シーンにいる全エンティティを走査して辞書に登録する
-    world->ForEachComponent<UUIDComponent>([&](ECS::EntityID id, UUIDComponent& uuidComp) {
-        uuidToEntityMap[uuidComp.id] = id;
+    world->ForEachComponent<UUIDComponent>(
+        [&](ECS::EntityID id, UUIDComponent& uuid)
+        {
+            uuidToEntityMap[uuid.id] = id;
         });
 
-    // すべてのコンポーネントの参照を解決する
-    world->ForEachComponent<UUIDComponent>([&](ECS::EntityID id, UUIDComponent& uuidComp) {
-        for (auto& info : componentRegistry) {
-            // 各コンポーネント内のEntityRefを更新
+    for (ECS::EntityID id : world->GetEntityIds())
+    {
+        for (const auto& info : componentRegistry)
+        {
             info.resolveLinks(world, id, uuidToEntityMap);
         }
+    }
+
+    ECS::EntityID restoredCameraId = ECS::INVALID_ENTITY_ID;
+
+    if (hasMainCameraUuid)
+    {
+        // UUIDからカメラを選ぶ
+        const auto cameraEntry = uuidToEntityMap.find(mainCameraUuid);
+
+        if (mainCameraUuid != 0 &&
+            cameraEntry != uuidToEntityMap.end() &&
+            world->HasComponent<Camera>(cameraEntry->second))
+        {
+            restoredCameraId = cameraEntry->second;
+        }
+    }
+    else
+    {
+        // ID順で最初のカメラを選択する
+        for (ECS::EntityID id : world->GetEntityIds())
+        {
+            if (world->HasComponent<Camera>(id))
+            {
+                restoredCameraId = id;
+                break;
+            }
+        }
+    }
+
+    CameraSystem::SetCamera(restoredCameraId);
+
+    return true;
+}
+
+void EditorUI::DeleteEditorEntity(ECS::World* world, ECS::EntityID id)
+{
+    const auto entityIds = world->GetEntityIds();
+
+    if (std::find(entityIds.begin(), entityIds.end(), id) == entityIds.end())
+    {
+		return; // 既に削除されている場合は何もしない
+    }
+
+    GraphicsCore::Get().FlushCommandQueue();
+
+    selectedEntityID = ECS::INVALID_ENTITY_ID;
+
+    if (CameraSystem::GetCamera() == id)
+    {
+		CameraSystem::SetCamera(ECS::INVALID_ENTITY_ID);    // 削除するエンティティがカメラだった場合はカメラを解除する
+    }
+
+	world->DeleteEntity(id);    // エンティティを削除する
+    ColliderSystem::Instance().ClearContactHistory();
+
+    std::unordered_map<uint64_t, ECS::EntityID> uuidToEntityMap;
+
+    world->ForEachComponent<UUIDComponent>(
+        [&](ECS::EntityID entityId, UUIDComponent& uuid)
+        {
+            uuidToEntityMap[uuid.id] = entityId;
         });
+
+    for (ECS::EntityID entityId : world->GetEntityIds())
+    {
+        for (const auto& info : componentRegistry)
+        {
+			info.resolveLinks(world, entityId, uuidToEntityMap);    // リンクの解決
+        }
+    }
 }
 
 void EditorUI::DrawHierarchyWindow(ECS::World* world) {
     ImGui::Begin("Hierarchy");
 
+	// "Create Empty Object" ボタンを押すと新しいエンティティを作成する
     if (ImGui::Button("Create Empty Object")) {
         auto newEntity = world->CreateEntity();
         world->AddComponent(newEntity, UUIDComponent{});
         world->AddComponent(newEntity, Name{ "New Object" });
     }
+
+    ImGui::SameLine();
+
+	// "Delete" ボタンは、エディタが編集モードであり、かつエンティティが選択されている場合のみ有効にする
+    const bool canDeleteEntity = editorState == EditorState::Edit && selectedEntityID != ECS::INVALID_ENTITY_ID;
+
+    ImGui::BeginDisabled(!canDeleteEntity);
+
+    if (ImGui::Button("Delete"))
+    {
+		pendingDeleteEntity = selectedEntityID; // 削除予約フラグを立てる
+    }
+
+    ImGui::EndDisabled();
 
     ImGui::Separator();
 

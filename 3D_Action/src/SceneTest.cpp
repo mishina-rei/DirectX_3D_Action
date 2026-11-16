@@ -10,9 +10,16 @@
 #include "UUID.h"
 #include "Collider.h"
 #include "Rigidbody.h"
+#include "Script.h"
+#include "MoveTestScript.h"
+#include "ScriptRegistry.h"
+
+#include <stdexcept>
 
 void SceneTest::Init()
 {
+    ScriptRegistry::Get().Register<MoveTestScript>("MoveTestScript");
+
     RegisterStructural<Transform>();
     RegisterStructural<Camera>();
     RegisterStructural<MeshRenderer>();
@@ -20,6 +27,7 @@ void SceneTest::Init()
     RegisterStructural<UUIDComponent>();
     RegisterStructural<BoxCollider>();
     RegisterStructural<Rigidbody>();
+    RegisterStructural<Script>();
 
     ShaderManager::Get().LoadShader("VS_Standard", L"src\\Shader\\StandardVS.hlsl", L"main", L"vs_6_0");
     ShaderManager::Get().LoadShader("PS_Standard", L"src\\Shader\\StandardPS.hlsl", L"main", L"ps_6_0");
@@ -32,6 +40,7 @@ void SceneTest::Init()
     EditorUI::Get().RegisterComponent<SpriteRenderer>("SpriteRenderer");
     EditorUI::Get().RegisterComponent<BoxCollider>("BoxCollider");
     EditorUI::Get().RegisterComponent<Rigidbody>("Rigidbody");
+    EditorUI::Get().RegisterComponent<Script>("Script");
 
     // カメラの作成
     auto camera = CreateEntity();
@@ -92,4 +101,13 @@ void SceneTest::Init()
 
     AddComponent(ui, uiTrans);
     AddComponent(ui, spriteRenderer);
+
+    Script movement;
+
+    if (!movement.Bind("MoveTestScript"))
+    {
+        throw std::runtime_error("Failed to bind MoveTestScript.");
+    }
+
+    AddComponent(ui, movement);
 }

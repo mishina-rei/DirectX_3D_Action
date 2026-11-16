@@ -28,6 +28,11 @@ public:
     void DrawImGui();
     void Update(ECS::World* world);
 
+    bool IsPlaying() const
+    {
+        return editorState == EditorState::Playing;
+    }
+
     void SaveScene(ECS::World* world, const std::string& filepath);
     void LoadScene(ECS::World* world, const std::string& filepath);
 
@@ -97,18 +102,51 @@ public:
     }
 
 private:
-    void DrawHierarchyWindow(ECS::World* world);
-    void DrawInspectorWindow(ECS::World* world);
+    enum class EditorState
+    {
+        Edit,
+        Playing,
+        Paused
+    };
 
+    EditorState editorState = EditorState::Edit;
+
+	enum class EditorAction // 再生・停止の予約アクションを表す列挙型
+    {
+        None,
+        Play,
+        Stop
+    };
+
+	EditorAction pendingAction = EditorAction::None;    // 再生・停止の予約アクション
+
+	json editSceneSnapshot;     // シーン再生前の状態をメモリに保存するためのJSONオブジェクト
+	float editTimeScale = 1.0f; // シーン再生前の時間のスケールを保存するための変数
+	std::string playbackError;  // 再生中のエラーを保持する文字列
+	
     // 登録されたコンポーネントメタデータのリスト
     std::vector<ComponentMetaData> componentRegistry;
 
     // 現在選択中のエンティティID
     ECS::EntityID selectedEntityID = ECS::INVALID_ENTITY_ID;
 
+	// 削除予定のエンティティID
+    ECS::EntityID pendingDeleteEntity = ECS::INVALID_ENTITY_ID;
+
     // ディスクリプタ
     DescriptorHandle handle;
 
     // ロード予約用のフラグ
     std::string nextScene = "";
+
+    void StartPlay(ECS::World* world);      // シーン再生の開始
+    void StopPlay(ECS::World* world);       // シーン再生の停止
+
+    json CaptureScene(ECS::World* world) const;         // シーンをJSONに保存
+    bool RestoreScene(ECS::World* world, const json& sceneJson);    // JSONからシーンを復元
+
+    void DrawHierarchyWindow(ECS::World* world);
+	void DeleteEditorEntity(ECS::World* world, ECS::EntityID id);   // エディタ上でエンティティを削除する
+    void DrawInspectorWindow(ECS::World* world);
+
 };

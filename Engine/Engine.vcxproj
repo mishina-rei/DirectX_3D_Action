@@ -160,10 +160,10 @@
     </ProjectReference>
   </ItemGroup>
   <ItemGroup>
-    <ClCompile Include="..\..\..\ENDLESSSHOOT\ENDLESS-SHOOT\ENDLESS_SHOOT\src\Audio.cpp" />
     <ClCompile Include="src\Animator.cpp" />
     <ClCompile Include="src\Archetype.cpp" />
     <ClCompile Include="src\AssetRef.cpp" />
+    <ClCompile Include="src\Audio.cpp" />
     <ClCompile Include="src\CameraSystem.cpp" />
     <ClCompile Include="src\ColliderSystem.cpp" />
     <ClCompile Include="src\CommandBuffer.cpp" />
@@ -211,7 +211,10 @@
     <ClCompile Include="src\Scene.cpp" />
     <ClCompile Include="src\SceneManager.cpp" />
     <ClCompile Include="src\ScriptSystem.cpp" />
+    <ClCompile Include="src\Script.cpp" />
+    <ClCompile Include="src\ScriptRegistry.cpp" />
     <ClCompile Include="src\Sprite.cpp" />
+    <ClCompile Include="src\EngineTime.cpp" />
     <ClCompile Include="src\world.cpp" />
   </ItemGroup>
   <ItemGroup>
@@ -260,11 +263,13 @@
     <ClInclude Include="include\SceneManager.h" />
     <ClInclude Include="include\Script.h" />
     <ClInclude Include="include\ScriptSystem.h" />
+    <ClInclude Include="include\ScriptRegistry.h" />
     <ClInclude Include="include\Signature.h" />
     <ClInclude Include="include\SparsePool.h" />
     <ClInclude Include="include\Sprite.h" />
     <ClInclude Include="include\SpriteRenderer.h" />
     <ClInclude Include="include\Transform.h" />
+    <ClInclude Include="include\EngineTime.h" />
     <ClInclude Include="include\UUID.h" />
     <ClInclude Include="include\Vector.h" />
     <ClInclude Include="include\world.h" />

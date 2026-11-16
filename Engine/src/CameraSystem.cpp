@@ -5,7 +5,7 @@
 #include "Camera.h"
 #include "Transform.h"
 
-ECS::EntityID CameraSystem::cameraId = 0;
+ECS::EntityID CameraSystem::cameraId = ECS::INVALID_ENTITY_ID;
 
 DirectX::XMFLOAT4X4 CameraSystem::GetView()
 {
