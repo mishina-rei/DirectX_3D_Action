@@ -1,4 +1,4 @@
-/*****************************************************************//**
+﻿/*****************************************************************//**
  * @file   NativeScript.h
  * @brief  Scriptシステム用のユーザースクリプト基底クラス
  *
@@ -9,6 +9,7 @@
 #pragma once
 
 #include "world.h"
+#include "EngineConfig.h"
 #include <functional>
 #include "SceneManager.h"
 
@@ -42,7 +43,10 @@ public:
 	//}
 	virtual void SaveSettings(JsonWriteArchive& archive) {}
 	virtual void LoadSettings(JsonReadArchive& archive) {}
+#if WITH_EDITOR
+	// 設定UIはエディタでのみ使用する
 	virtual void DrawSettings(ImGuiArchive& archive) {}
+#endif
 
 	// システムが呼ぶ初期化関数
 	void Init(ECS::World* _world, ECS::EntityID _id)

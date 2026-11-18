@@ -1,4 +1,4 @@
-<?xml version="1.0" encoding="utf-8"?>
+﻿<?xml version="1.0" encoding="utf-8"?>
 <Project DefaultTargets="Build" xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
   <ItemGroup Label="ProjectConfigurations">
     <ProjectConfiguration Include="Debug|Win32">
@@ -52,6 +52,7 @@
     <WholeProgramOptimization>true</WholeProgramOptimization>
     <CharacterSet>Unicode</CharacterSet>
   </PropertyGroup>
+  <Import Project="..\BuildSettings.props" />
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.props" />
   <ImportGroup Label="ExtensionSettings">
   </ImportGroup>
@@ -74,7 +75,7 @@
     <ClCompile>
       <WarningLevel>Level3</WarningLevel>
       <SDLCheck>true</SDLCheck>
-      <PreprocessorDefinitions>WIN32;_DEBUG;_CONSOLE;%(PreprocessorDefinitions)</PreprocessorDefinitions>
+      <PreprocessorDefinitions>WITH_EDITOR=$(WithEditor);WIN32;_DEBUG;_CONSOLE;%(PreprocessorDefinitions)</PreprocessorDefinitions>
       <ConformanceMode>true</ConformanceMode>
       <LanguageStandard>stdcpp20</LanguageStandard>
     </ClCompile>
@@ -92,7 +93,7 @@
       <FunctionLevelLinking>true</FunctionLevelLinking>
       <IntrinsicFunctions>true</IntrinsicFunctions>
       <SDLCheck>true</SDLCheck>
-      <PreprocessorDefinitions>WIN32;NDEBUG;_CONSOLE;%(PreprocessorDefinitions)</PreprocessorDefinitions>
+      <PreprocessorDefinitions>WITH_EDITOR=$(WithEditor);WIN32;NDEBUG;_CONSOLE;%(PreprocessorDefinitions)</PreprocessorDefinitions>
       <ConformanceMode>true</ConformanceMode>
       <LanguageStandard>stdcpp20</LanguageStandard>
     </ClCompile>
@@ -108,7 +109,7 @@
     <ClCompile>
       <WarningLevel>Level3</WarningLevel>
       <SDLCheck>false</SDLCheck>
-      <PreprocessorDefinitions>_DEBUG;_CONSOLE;%(PreprocessorDefinitions)</PreprocessorDefinitions>
+      <PreprocessorDefinitions>WITH_EDITOR=$(WithEditor);_DEBUG;_CONSOLE;%(PreprocessorDefinitions)</PreprocessorDefinitions>
       <ConformanceMode>true</ConformanceMode>
       <LanguageStandard>stdcpp20</LanguageStandard>
       <AdditionalIncludeDirectories>$(SolutionDir)Engine\include\;$(SolutionDir)DirectX12\include\;$(SolutionDir)library\;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
@@ -122,15 +123,6 @@
     <Manifest>
       <EnableSegmentHeap>true</EnableSegmentHeap>
     </Manifest>
-    <PostBuildEvent>
-      <Command>if not exist "$(OutDir)Shader" mkdir "$(OutDir)Shader"
-
-xcopy /Y /I /D "$(ProjectDir)src\Shader\*.hlsl" "$(OutDir)Shader\"
-
-xcopy /Y /I /D "$(ProjectDir)src\Shader\*.hlsli" "$(OutDir)Shader\"
-
-exit 0</Command>
-    </PostBuildEvent>
   </ItemDefinitionGroup>
   <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Release|x64'">
     <ClCompile>
@@ -138,7 +130,7 @@ exit 0</Command>
       <FunctionLevelLinking>true</FunctionLevelLinking>
       <IntrinsicFunctions>true</IntrinsicFunctions>
       <SDLCheck>false</SDLCheck>
-      <PreprocessorDefinitions>NDEBUG;_CONSOLE;%(PreprocessorDefinitions)</PreprocessorDefinitions>
+      <PreprocessorDefinitions>WITH_EDITOR=$(WithEditor);NDEBUG;_CONSOLE;%(PreprocessorDefinitions)</PreprocessorDefinitions>
       <ConformanceMode>true</ConformanceMode>
       <LanguageStandard>stdcpp20</LanguageStandard>
       <AdditionalIncludeDirectories>$(SolutionDir)Engine\include\;$(SolutionDir)DirectX12\include\;$(SolutionDir)library\;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
@@ -152,15 +144,6 @@ exit 0</Command>
     <Manifest>
       <EnableSegmentHeap>true</EnableSegmentHeap>
     </Manifest>
-    <PostBuildEvent>
-      <Command>if not exist "$(OutDir)Shader" mkdir "$(OutDir)Shader"
-
-xcopy /Y /I /D "$(ProjectDir)src\Shader\*.hlsl" "$(OutDir)Shader\"
-
-xcopy /Y /I /D "$(ProjectDir)src\Shader\*.hlsli" "$(OutDir)Shader\"
-
-exit 0</Command>
-    </PostBuildEvent>
   </ItemDefinitionGroup>
   <ItemGroup>
     <ProjectReference Include="..\DirectX12\DirectX12.vcxproj">
@@ -174,6 +157,7 @@ exit 0</Command>
     <ClCompile Include="src\main.cpp" />
     <ClCompile Include="src\SceneTest.cpp" />
     <ClCompile Include="src\MoveTestScript.cpp" />
+    <ClCompile Include="src\SceneTransitionTestScript.cpp" />
   </ItemGroup>
   <ItemGroup>
     <FxCompile Include="src\Shader\SpritePS.hlsl">
@@ -209,7 +193,36 @@ exit 0</Command>
   <ItemGroup>
     <ClInclude Include="src\SceneTest.h" />
     <ClInclude Include="src\MoveTestScript.h" />
+    <ClInclude Include="src\SceneTransitionTestScript.h" />
   </ItemGroup>
+  <!-- エディタは制作元を編集し、ゲーム本編は出力先のデータだけで実行する -->
+  <ItemDefinitionGroup Condition="'$(WithEditor)'=='1'">
+    <ClCompile>
+      <!-- C++文字列内でバックスラッシュがエスケープとして解釈されないよう区切りを変換する -->
+      <PreprocessorDefinitions>PROJECT_CONTENT_DIRECTORY=L&quot;$(MSBuildProjectDirectory.Replace('\', '/'))&quot;;%(PreprocessorDefinitions)</PreprocessorDefinitions>
+    </ClCompile>
+  </ItemDefinitionGroup>
+  <!-- 実行ファイルの隣にゲーム実行に必要なデータを配置する -->
+  <Target Name="StageRuntimeContent" AfterTargets="Build" Condition="'$(Platform)'=='x64'">
+    <PropertyGroup>
+      <!-- 10.0という指定値ではなく、Visual Studioが選択したSDKの実際の場所を使う -->
+      <DxcRuntimeDirectory>$(WindowsSDK_ExecutablePath_x64.Split(';')[0])</DxcRuntimeDirectory>
+    </PropertyGroup>
+    <ItemGroup>
+      <RuntimeShader Include="$(ProjectDir)src\Shader\*.hlsl;$(ProjectDir)src\Shader\*.hlsli" />
+      <RuntimeDll Include="$(ProjectDir)assimp-vc143-mt.dll" Condition="'$(Configuration)'=='Release'" />
+      <RuntimeDll Include="$(ProjectDir)assimp-vc143-mtd.dll" Condition="'$(Configuration)'=='Debug'" />
+      <RuntimeDll Include="$(DxcRuntimeDirectory)\dxcompiler.dll;$(DxcRuntimeDirectory)\dxil.dll" />
+    </ItemGroup>
+    <MakeDir Directories="$(OutDir)Shader" />
+    <Copy SourceFiles="@(RuntimeShader)" DestinationFolder="$(OutDir)Shader" SkipUnchangedFiles="true" />
+    <Copy SourceFiles="@(RuntimeDll)" DestinationFolder="$(OutDir)" SkipUnchangedFiles="true" />
+    <Copy SourceFiles="$(ProjectDir)GameSettings.json" DestinationFolder="$(OutDir)" SkipUnchangedFiles="true" />
+    <Exec Command="xcopy /D /E /I /Y &quot;$(ProjectDir)Assets&quot; &quot;$(OutDir)Assets\&quot; &gt;nul" IgnoreExitCode="true">
+      <Output TaskParameter="ExitCode" PropertyName="AssetCopyExitCode" />
+    </Exec>
+    <Error Condition="$(AssetCopyExitCode) &gt; 1" Text="Failed to copy runtime assets." />
+  </Target>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />
   <ImportGroup Label="ExtensionTargets">
   </ImportGroup>

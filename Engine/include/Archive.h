@@ -1,6 +1,9 @@
-// Archive.h
+﻿// Archive.h
 #pragma once
+#include "EngineConfig.h"
+#if WITH_EDITOR
 #include "imgui.h"
+#endif
 #include "json.hpp"
 #include "Vector.h" 
 #include "Quaternion.h"
@@ -23,6 +26,8 @@ using json = nlohmann::json;
 // ==========================================
 // エディタ描画用アーカイバ (ImGui)
 // ==========================================
+#if WITH_EDITOR
+// UI用アーカイバはエディタビルドだけに含める
 class ImGuiArchive {
 public:
     ECS::World* world = nullptr;
@@ -125,6 +130,7 @@ public:
     }
 };
 
+#endif
 // ==========================================
 // セーブデータ書き込み用アーカイバ (JSON Write)
 // ==========================================

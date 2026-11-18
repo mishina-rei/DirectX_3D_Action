@@ -16,8 +16,13 @@
 #include <memory>
 #include <windows.h>
 #include <mmsystem.h>
-#include <imgui_impl_dx12.h>
+#include "EngineConfig.h"
 #include "json.hpp"
 #include <functional>
+
+
+#if WITH_EDITOR
+#include <imgui_impl_dx12.h>
+#endif
 
 #endif //ENGINE_PCH_H

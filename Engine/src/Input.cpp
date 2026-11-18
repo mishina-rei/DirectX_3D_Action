@@ -1,7 +1,9 @@
-#include "Engine_pch.h"
+﻿#include "Engine_pch.h"
 
 #include "Input.h"
+#if WITH_EDITOR
 #include "imgui.h"
+#endif
 
 //--- グローバル変数
 BYTE g_keyTable[256];
@@ -33,10 +35,15 @@ void UpdateInput(bool canLockMouse)
 		SetMouseLock(false);
 	}
 	else if (IsKeyTrigger(VK_LBUTTON)) {
+#if WITH_EDITOR
 		// ImGuiが初期化されていて、かつUI上にマウスカーソルがない時だけロックする
 		if (ImGui::GetCurrentContext() != nullptr && !ImGui::GetIO().WantCaptureMouse) {
 			SetMouseLock(true);
 		}
+#else
+		// ゲーム単独実行ではImGuiの状態に依存せずロックする
+		SetMouseLock(true);
+#endif
 	}
 	// マウス移動量の初期化
 	g_mouseDeltaX = 0;

@@ -1,4 +1,4 @@
-#pragma once
+﻿#pragma once
 
 #include "Vector.h"
 #include "Quaternion.h"
@@ -25,9 +25,12 @@ struct Transform
 		archive.Property("Rotation", rotation);
 		archive.Property("Scale", scale);
 
+#if WITH_EDITOR
 		EntityRef oldParent = parent;
+#endif
 		archive.Property("Parent", parent);
 
+#if WITH_EDITOR
 		// エディタ操作で親が変わった瞬間に、見た目を維持するようにローカル値を自動調整
 		if constexpr (std::is_same_v<Archive, ImGuiArchive>) {
 			if (archive.world && oldParent.id != parent.id) {
@@ -36,6 +39,7 @@ struct Transform
 				SetParent(archive.world, newParent, true);
 			}
 		}
+#endif
 	}
 
 	// 親の設定（見た目のワールド変換を維持するかどうか）

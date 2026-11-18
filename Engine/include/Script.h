@@ -1,4 +1,4 @@
-#pragma once
+﻿#pragma once
 #include <memory>
 #include "NativeScript.h"
 #include "json.hpp"
@@ -22,7 +22,9 @@ struct Script
 	// property()で対応できないため、個別に処理を書く
 	void Reflect(JsonWriteArchive& archive);
 	void Reflect(JsonReadArchive& archive);
+#if WITH_EDITOR
 	void Reflect(ImGuiArchive& archive);
+#endif
 	void Reflect(ResolveArchive& archive);
 
 private:

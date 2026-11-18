@@ -1,6 +1,6 @@
-#include "Archetype.h"
-
 #include "Engine_pch.h"
+// プリコンパイル済みヘッダーの後で自身の型を読み込む
+#include "Archetype.h"
 
 size_t ECS::Archetype::AddEntity(EntityID id)
 {

@@ -1,4 +1,4 @@
-#include "Engine_pch.h"
+﻿#include "Engine_pch.h"
 #include "Script.h"
 #include "ScriptRegistry.h"
 #include "Archive.h"
@@ -70,6 +70,8 @@ void Script::Reflect(JsonReadArchive& archive)
     script = std::move(loadedScript);
 }
 
+#if WITH_EDITOR
+// ゲーム本編にはスクリプト設定UIを含めない
 void Script::Reflect(ImGuiArchive& archive)
 {
     ImGui::PushID("Script");
@@ -119,6 +121,8 @@ void Script::Reflect(ImGuiArchive& archive)
 
     ImGui::PopID();
 }
+
+#endif
 
 void Script::Reflect(ResolveArchive& archive)
 {

@@ -1,4 +1,4 @@
-#pragma once
+﻿#pragma once
 #include <windows.h>
 #include <string>
 
@@ -19,11 +19,20 @@ public:
     {
         if (Initialize(title, width, height))
         {
-            // 最初のシーンを登録
-            SceneManager::GetInstance().Init<InitialScene>();
+            try
+            {
+                // 最初のシーンを登録
+                SceneManager::GetInstance().Init<InitialScene>();
 
-            // メインループ開始
-            MainLoop();
+                // メインループ開始
+                MainLoop();
+            }
+            catch (...)
+            {
+                // シーン読み込みや実行中に失敗しても初期化済みのシステムを終了する
+                Terminate();
+                throw;
+            }
         }
         Terminate();
     }

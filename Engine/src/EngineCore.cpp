@@ -1,4 +1,4 @@
-#include "Engine_pch.h"
+﻿#include "Engine_pch.h"
 #include "EngineCore.h"
 #include <crtdbg.h>
 #pragma comment(lib, "winmm.lib")
@@ -11,10 +11,13 @@
 #include "RenderSystem.h"
 
 #include "GraphicsCore.h" 
+#include <stdexcept>
+#if WITH_EDITOR
 #include "EditorUI.h"
 
 // ImGuiのWin32メッセージハンドラを宣言
 extern IMGUI_IMPL_API LRESULT ImGui_ImplWin32_WndProcHandler(HWND hWnd, UINT msg, WPARAM wParam, LPARAM lParam);
+#endif
 
 
 bool EngineCore::Initialize(const std::wstring& title, int width, int height)
@@ -54,8 +57,14 @@ bool EngineCore::Initialize(const std::wstring& title, int width, int height)
     GraphicsCore::Get().Initialize(m_hwnd, width, height);
 
 	// シェーダーのロード
-    ShaderManager::Get().LoadShader("VS_Sprite", L"C:\\Develop\\3D_Action\\DirectX_3D_Action\\3D_Action\\src\\Shader\\SpriteVS.hlsl", L"main", L"vs_6_0");
-    ShaderManager::Get().LoadShader("PS_Sprite", L"C:\\Develop\\3D_Action\\DirectX_3D_Action\\3D_Action\\src\\Shader\\SpritePS.hlsl", L"main", L"ps_6_0");
+#if WITH_EDITOR
+    // 編集時は制作元、ゲーム単独実行時は配布先のシェーダーを使用する
+    ShaderManager::Get().LoadShader("VS_Sprite", L"src/Shader/SpriteVS.hlsl", L"main", L"vs_6_0");
+    ShaderManager::Get().LoadShader("PS_Sprite", L"src/Shader/SpritePS.hlsl", L"main", L"ps_6_0");
+#else
+    ShaderManager::Get().LoadShader("VS_Sprite", L"Shader/SpriteVS.hlsl", L"main", L"vs_6_0");
+    ShaderManager::Get().LoadShader("PS_Sprite", L"Shader/SpritePS.hlsl", L"main", L"ps_6_0");
+#endif
     Sprite::Init();
     InitInput(m_hwnd);
     InitAudio();
@@ -63,7 +72,9 @@ bool EngineCore::Initialize(const std::wstring& title, int width, int height)
     RenderSystem::Init(); // シャドウマップの初期化等
 
     // エディタUIの初期化
+#if WITH_EDITOR
     EditorUI::Get().Initialize(m_hwnd);
+#endif
 
     return true;
 }
@@ -89,6 +100,7 @@ void EngineCore::MainLoop()
             if (static_cast<float>(nowTime - preExecTime) >= 1000.0f / 60.0f)
             {
                 Time::Update();
+#if WITH_EDITOR
                 UpdateInput(EditorUI::Get().IsPlaying());
 
                 EditorUI::Get().Update(SceneManager::GetInstance().GetCurrentScene()->GetWorld());
@@ -103,6 +115,18 @@ void EngineCore::MainLoop()
                     auto* scene = SceneManager::GetInstance().GetCurrentScene();
                     scene->ExecuteCommands();
                 }
+#else
+                // ゲーム単独実行では起動直後からシーンを更新する
+                UpdateInput(true);
+                SceneManager::GetInstance().Update();
+                if (!SceneManager::GetInstance().GetSceneLoadError().empty())
+                {
+                    // UIのない実行でも読み込みエラーを見逃さず、呼び出し元へ通知する
+                    timeEndPeriod(1);
+                    throw std::runtime_error(SceneManager::GetInstance().GetSceneLoadError());
+                }
+                EffekseerManager::Update();
+#endif
 
                 // DX12のフレーム制御を組み込む
                 GraphicsCore::Get().BeginFrame();
@@ -110,8 +134,10 @@ void EngineCore::MainLoop()
                 // シーン内のすべての描画コマンドを積む
                 SceneManager::GetInstance().Draw();
 
+#if WITH_EDITOR
 				EditorUI::Get().BeginUI();
 				EditorUI::Get().RenderUI(SceneManager::GetInstance().GetCurrentScene()->GetWorld());
+#endif
 
                 GraphicsCore::Get().EndFrame();
 
@@ -128,7 +154,9 @@ void EngineCore::Terminate()
     GraphicsCore::Get().FlushCommandQueue();
     
     // エディタUIの終了処理
+#if WITH_EDITOR
     EditorUI::Get().Shutdown();
+#endif
 
     SceneManager::GetInstance().Uninit();
     EffekseerManager::Uninit();
@@ -141,6 +169,7 @@ void EngineCore::Terminate()
 
 LRESULT CALLBACK EngineCore::WindowProc(HWND hWnd, UINT message, WPARAM wParam, LPARAM lParam)
 {
+#if WITH_EDITOR
     // ImGuiにメッセージを投げる（UIがクリックなどを処理するため）
     if (ImGui::GetCurrentContext() != nullptr && ImGui::GetIO().BackendPlatformUserData != nullptr) {
         if (ImGui_ImplWin32_WndProcHandler(hWnd, message, wParam, lParam)) {
@@ -161,6 +190,7 @@ LRESULT CALLBACK EngineCore::WindowProc(HWND hWnd, UINT message, WPARAM wParam, 
     }
 
 
+#endif
     // アプリケーション独自のメッセージ処理
     switch (message) {
     case WM_DESTROY:

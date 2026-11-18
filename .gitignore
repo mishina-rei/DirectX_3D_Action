@@ -462,3 +462,9 @@ desktop.ini
 
 # imgui
 imgui.ini
+
+#設定ファイル
+*.md
+*.obj
+*.json
+*.props
